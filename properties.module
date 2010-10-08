@@ -1,0 +1,137 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_field_info().
+ */
+function properties_field_info() {
+  return array(
+    'properties' => array(
+      'label' => t('Dynamic Properties'),
+      'description' => t('This field stores a dynamic amount of properties in the database.'),
+      'settings' => array(),
+      'instance_settings' => array(),
+      'default_widget' => 'properties_table',
+      'default_formatter' => 'properties_formatter',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_schema().
+ */
+function properties_field_schema($field) {
+  $columns = array(
+    'attribute' => array(
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+    ),
+    'value' => array(
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+    ),
+    'category' => array(
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+    ),
+  );
+
+  return array(
+    'columns' => $columns,
+    'indexes' => array(
+      'attribute' => array('attribute'),
+      'category' => array('category'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+function properties_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function properties_field_is_empty($item, $field) {
+  return empty($item['attribute']);
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function properties_field_formatter_info() {
+  return array(
+    'properties_formatter' => array(
+      'label' => t('Default'),
+      'field types' => array('properties'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function properties_field_widget_info() {
+    return array(
+    'properties_table' => array(
+      'label' => t('Properties table'),
+      'field types' => array('properties'),
+      'settings' => array(),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widet_form().
+ */
+function properties_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $element['attribute'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Attribute'),
+    '#default_value' => isset($items[$delta]['attribute']) ? $items[$delta]['attribute'] : '',
+  );
+  $element['value'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Value'),
+    '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : '',
+  );
+  $element['category'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Category'),
+    '#default_value' => isset($items[$delta]['category']) ? $items[$delta]['category'] : '',
+  );
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function properties_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $items_by_category = array();
+  foreach ($items as $item) {
+    if (!isset($items_by_category[$item['category']])) {
+      $items_by_category[$item['category']] = array();
+    }
+    $items_by_category[$item['category']][] = $item;
+  }
+
+  $i = 0;
+  foreach ($items_by_category as $category => $items_in_category) {
+    $element[0][$i++] = array('#markup' => '<h3>' . $category . '</h3>');
+    foreach ($items_in_category as $item) {
+      $element[0][$i++] = array('#markup' => '<p>' . $item['attribute'] . ':' . $item['value'] . '</p>');
+    }
+  }
+  return $element;
+}
