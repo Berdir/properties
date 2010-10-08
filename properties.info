@@ -1,4 +1,4 @@
-; $Id: privatemsg.info,v 1.1.2.1.2.3.2.4.2.4 2010/07/07 08:55:32 berdir Exp $
+; $Id$
 name = Dynamic Properties
 description = Provides a dynamic property field that can contain an unlimited number of attribute value pairs.
 core = 7.x

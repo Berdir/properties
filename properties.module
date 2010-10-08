@@ -130,7 +130,7 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
   foreach ($items_by_category as $category => $items_in_category) {
     $element[0][$i++] = array('#markup' => '<h3>' . $category . '</h3>');
     foreach ($items_in_category as $item) {
-      $element[0][$i++] = array('#markup' => '<p>' . $item['attribute'] . ':' . $item['value'] . '</p>');
+      $element[0][$i++] = array('#markup' => '<p>' . $item['attribute'] . ': ' . $item['value'] . '</p>');
     }
   }
   return $element;
