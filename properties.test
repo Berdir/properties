@@ -1,0 +1,59 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Contains tests for the properties.module
+ */
+
+
+/**
+ * Tests for fields integration.
+ */
+class PropertiesTestCase extends DrupalWebTestCase {
+  /**
+   * Implementation of getInfo().
+   */
+  public static function getInfo() {
+    return array
+    (
+      'name' => t('Properties creation'),
+      'description' => t('Tests properties field type.'),
+      'group' => t('Properties'),
+    );
+  }
+
+  /**
+   * Implementation of setUp().
+   */
+  function setUp() {
+    parent::setUp('properties');
+  }
+
+  function testPropertyFieldCreation() {
+    $admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content'));
+    $this->drupalLogin($admin);
+
+    // Create a new field.
+    $edit = array(
+      'fields[_add_new_field][label]' => $label = $this->randomName(),
+      'fields[_add_new_field][field_name]' => $name = strtolower($this->randomName()),
+      'fields[_add_new_field][type]' => 'properties',
+      'fields[_add_new_field][widget_type]' => 'properties_table',
+    );
+    $this->drupalPost('admin/structure/types/manage/page/fields', $edit, t('Save'));
+    $this->drupalPost(NULL, array(), t('Save field settings'));
+    $this->drupalPost(NULL, array(), t('Save settings'));
+
+    // Preview message.
+    $node = array(
+      'title' => $title = $this->randomName(10),
+      'field_' . $name . '[und][0][attribute]' => $this->randomName(20),
+      'field_' . $name . '[und][0][value]' => $this->randomName(20),
+      'field_' . $name . '[und][0][category]' => $this->randomName(15),
+
+    );
+    $this->drupalPost('node/add/page', $node, t('Save'));
+    $this->assertText($node['field_' . $name . '[und][0][value]'], t('Content of new field is displayed.'));
+  }
+}
