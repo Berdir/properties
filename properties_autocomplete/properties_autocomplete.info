@@ -1,0 +1,6 @@
+; $Id$
+name = Dynamic Properties Autocompletion
+description = Provides autocomplete suggestions for attributes and categories.
+core = 7.x
+dependencies[] = properties
+
