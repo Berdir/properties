@@ -45,7 +45,7 @@ class PropertiesTestCase extends DrupalWebTestCase {
     $this->drupalPost(NULL, array(), t('Save field settings'));
     $this->drupalPost(NULL, array(), t('Save settings'));
 
-    // Preview message.
+    // Create node.
     $node = array(
       'title' => $title = $this->randomName(10),
       'field_' . $name . '[und][0][attribute]' => $this->randomName(20),
@@ -54,6 +54,9 @@ class PropertiesTestCase extends DrupalWebTestCase {
 
     );
     $this->drupalPost('node/add/page', $node, t('Save'));
+    $this->assertText($node['field_' . $name . '[und][0][attribute]'], t('Content of new field is displayed.'));
     $this->assertText($node['field_' . $name . '[und][0][value]'], t('Content of new field is displayed.'));
+    $this->assertText($node['field_' . $name . '[und][0][category]'], t('Content of new field is displayed.'));
+
   }
 }
