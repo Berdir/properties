@@ -2,6 +2,122 @@
 // $Id$
 
 /**
+ * Implements hook_permission().
+ */
+function properties_permission() {
+  return array(
+    'administer properties attributes' => array(
+      'label' => t('Administer attributes'),
+      'description' => t('Allows to create new, edit existing and delete attributes.'),
+    ),
+    'administer properties categories' => array(
+      'label' => t('Administer categories'),
+      'description' => t('Allows to create new, edit existing and delete categories.'),
+    ),
+    'add properties categories to content' => array(
+      'label' => t('Add categories to content'),
+      'description' => t('Allows to add existing categories to content.'),
+    ),
+    'add properties attributes to content' => array(
+      'label' => t('Add attributes to content'),
+      'description' => t('Allows to add existing attributes to content.'),
+    )
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function properties_menu() {
+  $items['admin/config/content/properties'] = array(
+    'title' => 'Properties',
+    'access callback' => 'properties_admin_access',
+    'page callback' => 'properties_admin_attributes_list',
+    'file' => 'properties.admin.inc',
+  );
+
+  $items['admin/config/content/properties/attributes'] = array(
+    'title' => 'Attributes',
+    'page callback' => 'properties_admin_attributes_list',
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('attributes'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/content/properties/attributes/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/content/properties/attributes/add'] = array(
+    'title' => 'Add attribute',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_attributes_form'),
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('attributes'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/config/content/properties/attributes/edit/%properties_attribute'] = array(
+    'title' => 'Edit attribute',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_attributes_form', 6),
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('attributes'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/content/properties/categories'] = array(
+    'title' => 'Categories',
+    'page callback' => 'properties_admin_categories_list',
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('categories'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+
+  $items['admin/config/content/properties/categories/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/content/properties/categories/add'] = array(
+    'title' => 'Add category',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_categories_form'),
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('attributes'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/config/content/properties/categories/edit/%'] = array(
+    'title' => 'Edit category',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_categories_form', 6),
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('categories'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function properties_admin_access($type = NULL) {
+  if (empty($type)) {
+    return user_access('administer properties attributes') || user_access('administer properties categories');
+  }
+  else {
+    return user_access('administer properties ' . $type);
+  }
+}
+
+/**
  * Implements hook_field_info().
  */
 function properties_field_info() {
