@@ -31,6 +31,7 @@ function properties_permission() {
 function properties_menu() {
   $items['admin/config/content/properties'] = array(
     'title' => 'Properties',
+    'description' => 'Administer categories and attributes',
     'access callback' => 'properties_admin_access',
     'page callback' => 'properties_admin_attributes_list',
     'file' => 'properties.admin.inc',
