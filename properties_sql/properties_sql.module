@@ -46,10 +46,8 @@ function properties_sql_properties_attribute_load($name) {
  *   Array of machine readable name of the attributes.
  */
 function properties_sql_properties_attribute_load_multiple($names = array()) {
-  $result = db_query("SELECT * FROM {properties_attribute} WHERE name in (name > :created", array(
-  ':created' => REQUEST_TIME - 3600,
-  ));
-
+  $result = db_query("SELECT * FROM {properties_attribute} WHERE name in (:names)", array(':names' => $names));
+  return $result->fetchAllAssoc('name');
 }
 
 /**
