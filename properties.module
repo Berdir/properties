@@ -31,6 +31,7 @@ function properties_permission() {
 function properties_menu() {
   $items['admin/config/content/properties'] = array(
     'title' => 'Properties',
+    'description' => 'Administer categories and attributes',
     'access callback' => 'properties_admin_access',
     'page callback' => 'properties_admin_attributes_list',
     'file' => 'properties.admin.inc',
@@ -70,6 +71,16 @@ function properties_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/config/content/properties/attributes/delete/%properties_attribute'] = array(
+    'title' => 'Delete attribute',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_attributes_delete', 6),
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('attributes'),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['admin/config/content/properties/categories'] = array(
     'title' => 'Categories',
     'page callback' => 'properties_admin_categories_list',
@@ -99,6 +110,16 @@ function properties_menu() {
     'title' => 'Edit category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('properties_admin_categories_form', 6),
+    'file' => 'properties.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('categories'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/content/properties/categories/delete/%'] = array(
+    'title' => 'Delete category',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_categories_delete', 6),
     'file' => 'properties.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('categories'),
@@ -263,8 +284,8 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
  * @param $action
  *   Name of the API function, eg load, save, delete.
  */
-function _properties__get_call($type, $action) {
-  return variable_get('properties_api', 'properties_sql') . '_' . $type . '_' . $action;
+function _properties_get_call($type, $action) {
+  return variable_get('properties_api', 'properties_sql') . '_properties_' . $type . '_' . $action;
 }
 
 /**

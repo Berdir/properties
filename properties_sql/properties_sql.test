@@ -6,4 +6,37 @@
  * Contains tests for the properties_sql.module
  */
 
+/**
+ * Tests for fields integration.
+ */
+class PropertiesSQLTestCase extends DrupalWebTestCase {
+  /**
+   * Implementation of getInfo().
+   */
+  public static function getInfo() {
+    return array
+    (
+      'name' => t('Properties SQL'),
+      'description' => t('Tests properties sql API implementation.'),
+      'group' => t('Properties'),
+    );
+  }
 
+  /**
+   * Implementation of setUp().
+   */
+  function setUp() {
+    parent::setUp('properties_sql');
+  }
+
+  function testAttributeSave() {
+    $attribute = new stdClass();
+    $attribute->name = strtolower($this->randomName(8));
+    $attribute->label = $this->randomName(25);
+
+    properties_sql_properties_attribute_save($attribute);
+
+    // Verify in database.
+    $this->assertEqual($attribute->label, db_query('SELECT label FROM {properties_attribute} WHERE name = :name', array(':name' => $attribute->name))->fetchField());
+  }
+}
