@@ -31,7 +31,7 @@ class PropertiesSQLTestCase extends DrupalWebTestCase {
 
   function testAttributeSave() {
     $attribute = new stdClass();
-    $attribute->name = strtolower($this->randomName($length));
+    $attribute->name = strtolower($this->randomName(8));
     $attribute->label = $this->randomName(25);
 
     properties_sql_properties_attribute_save($attribute);
