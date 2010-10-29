@@ -60,7 +60,7 @@ function properties_autocomplete_menu() {
 
 /**
  * Page callback for autocomplete suggestions.
- */
+ *
 function properties_autocomplete_js($type, $langcode, $string = NULL) {
   drupal_json_output((object) drupal_map_assoc(array('Attribute 1', 'Attribute 2')));
-}
+}*/

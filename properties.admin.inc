@@ -1,11 +1,26 @@
 <?php
+
 // $Id$
 
 /**
  * Menu callback; Display a list of categories.
  */
 function properties_admin_categories_list() {
-  return 'Categories list';
+  $categories = properties_category_load_paging(20);
+
+  $header = array(t('Name'), t('Label'), t('Operations'));
+  $rows = array();
+  foreach ($categories as $category) {
+
+    $links = array(l('edit', 'admin/config/content/properties/categories/edit/' . $category->name), l('delete', 'admin/config/content/properties/categories/delete/' . $category->name));
+
+    $rows[] = array(
+      $category->name,
+      check_plain($category->label),
+      implode(' ', $links),
+    );
+  }
+  return theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No categories found.')));
 }
 
 /**
@@ -35,7 +50,7 @@ function properties_admin_attributes_list() {
  */
 function properties_admin_attributes_form($form, &$form_state, $attribute = NULL) {
   if (empty($attribute)) {
-    $attribute = (object)array(
+    $attribute = (object) array(
       'label' => '',
       'name' => '',
     );
@@ -46,13 +61,14 @@ function properties_admin_attributes_form($form, &$form_state, $attribute = NULL
     '#type' => 'textfield',
     '#default_value' => $attribute->label,
     '#maxlength' => 255,
+    '#required' => TRUE,
   );
 
   $form['name'] = array(
     '#type' => 'machine_name',
     '#default_value' => $attribute->name,
     '#maxlength' => 32,
-    '#disabled' => !empty($type->name),
+    '#disabled' => !empty($attribute->name),
     '#machine_name' => array(
       'exists' => 'properties_attribute_load',
     ),
@@ -88,7 +104,7 @@ function properties_admin_attributes_form($form, &$form_state, $attribute = NULL
  */
 function properties_admin_attributes_add($form, &$form_state) {
   form_state_values_clean($form_state);
-  properties_attribute_save((object)$form_state['values']);
+  properties_attribute_save((object) $form_state['values']);
   $form_state['redirect'] = 'admin/config/content/properties/attributes';
   drupal_set_message(t('Attribute created.'));
 }
@@ -98,7 +114,7 @@ function properties_admin_attributes_add($form, &$form_state) {
  */
 function properties_admin_attributes_save($form, &$form_state) {
   form_state_values_clean($form_state);
-  properties_attribute_save((object)$form_state['values']);
+  properties_attribute_save((object) $form_state['values']);
   $form_state['redirect'] = 'admin/config/content/properties/attributes';
   drupal_set_message(t('Attribute updated.'));
 }
@@ -108,69 +124,312 @@ function properties_admin_attributes_save($form, &$form_state) {
  */
 function properties_admin_attributes_add_another($form, &$form_state) {
   form_state_values_clean($form_state);
-  properties_attribute_save((object)$form_state['values']);
+  properties_attribute_save((object) $form_state['values']);
   drupal_set_message(t('Attribute created.'));
 }
-
 
 /**
  * Form builder; Add/Edit form for categories.
  */
 function properties_admin_categories_form($form, &$form_state, $category = NULL) {
-  if (empty($category)) {
-    $category = (object)array(
+  if (!isset($form_state['category'])) {
+    if (empty($category)) {
+      $category = (object) array(
+        'label' => '',
+        'name' => '',
+        'attributes' => array(),
+      );
+    }
+
+    // Add an empty attribute.
+    $attribute = (object) array(
       'label' => '',
       'name' => '',
-      'attributes' => array(),
     );
+    $category->attributes[] = $attribute;
+
+    $form_state['category'] = $category;
   }
+
+  drupal_add_css(drupal_get_path('module', 'properties') . '/properties_admin.css');
 
   $form['label'] = array(
     '#title' => t('Category label'),
     '#type' => 'textfield',
-    '#default_value' => $category->label,
+    '#default_value' => $form_state['category']->label,
     '#maxlength' => 255,
+    '#required' => TRUE,
   );
 
   $form['name'] = array(
     '#type' => 'machine_name',
-    '#default_value' => $category->name,
+    '#default_value' => $form_state['category']->name,
     '#maxlength' => 32,
-    '#disabled' => !empty($type->name),
+    '#disabled' => !empty($form_state['category']->name),
     '#machine_name' => array(
       'exists' => 'properties_category_load',
     ),
     '#description' => t('A unique machine-readable name for this category. It must only contain lowercase letters, numbers, and underscores. This name will be used when using this attribute.'),
   );
 
-  $form['add'] = array(
-    '#value' => t('Add'),
+  $attributes = array();
+  $delta = 0;
+  $max = count($form_state['category']->attributes);
+  foreach ($form_state['category']->attributes as $delta => $attribute) {
+    $element = array();
+    $element['attribute'] = array(
+      '#type' => 'textfield',
+      '#default_value' => $attribute->name,
+      '#autocomplete_path' => 'properties_autocomplete/attribute',
+      '#ajax' => array(
+        'callback' => 'properties_admin_update_label_js',
+        'wrapper' => 'attributes-wrapper',
+        'effect' => 'fade',
+      ),
+    );
+    // If name is given but label is empty, this means that this is a new
+    // attribute. Display a textfield to enter a label.
+    if (!empty($attribute->new)) {
+      $element['label'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $attribute->label,
+        '#maxlength' => 255,
+        '#required' => TRUE,
+      );
+    } else {
+      $element['label'] = array(
+        '#markup' => $attribute->label,
+      );
+    }
+
+    // We name the element '_weight' to avoid clashing with elements
+    // defined by widget.
+    $element['_weight'] = array(
+      '#type' => 'weight',
+      '#title' => t('Weight for row @number', array('@number' => $delta)),
+      '#title_display' => 'invisible',
+      // Note: this 'delta' is the FAPI 'weight' element's property.
+      '#delta' => $max,
+      '#default_value' => isset($attribute->weight) ? $attribute->weight : $delta,
+      '#weight' => 100,
+    );
+    $attributes[$delta] = $element;
+  }
+
+  $attributes += array(
+    '#theme' => 'properties_admin_categories_attributes_form',
+    '#title' => t('Attributes'),
+    '#description' => t('Configure the default attributes of this category.'),
+    '#prefix' => '<div id="attributes-wrapper">',
+    '#suffix' => '</div>',
+    '#max_delta' => $delta,
+    '#tree' => TRUE,
+  );
+  $attributes['add_more'] = array(
     '#type' => 'submit',
-    '#submit' => array('properties_admin_categories_add'),
+    '#name' => 'attributes_add_more',
+    '#value' => t('Add another attribute'),
+    '#attributes' => array('class' => array('field-add-more-submit')),
+    //'#limit_validation_errors' => array(array('name')),
+    '#submit' => array('properties_admin_add_more_submit'),
+    '#ajax' => array(
+      'callback' => 'properties_admin_add_more_js',
+      'wrapper' => 'attributes-wrapper',
+      'effect' => 'fade',
+    ),
   );
 
-  $form['add_another'] = array(
-    '#value' => t('Add another'),
-    '#type' => 'submit',
-    '#submit' => array('properties_admin_categories_add_another'),
-  );
+  $form['attributes'] = $attributes;
 
+  if (empty($category->name)) {
+    $form['add'] = array(
+      '#value' => t('Add'),
+      '#type' => 'submit',
+      '#submit' => array('properties_admin_categories_add'),
+    );
+
+    $form['add_another'] = array(
+      '#value' => t('Add another'),
+      '#type' => 'submit',
+      '#submit' => array('properties_admin_categories_add_another'),
+    );
+  }
+  else {
+    $form['save'] = array(
+      '#value' => t('Save'),
+      '#type' => 'submit',
+      '#submit' => array('properties_admin_categories_save'),
+    );
+  }
   return $form;
+}
+
+function properties_admin_categories_form_validate($form, &$form_state) {
+  // Update category object.
+  $form_state['category']->label = $form_state['values']['label'];
+  $form_state['category']->name = $form_state['values']['name'];
+
+  foreach ($form_state['values']['attributes'] as $delta => $attribute) {
+    if (is_int($delta)) {
+      if (empty($attribute['attribute'])) {
+        $attribute_object = (object)array(
+          'label' => '',
+          'name' => '',
+        );
+        $form_state['category']->attributes[$delta] = $attribute_object;
+      }
+      elseif ($attribute_object = properties_attribute_load($attribute['attribute'])) {
+        $attribute_object->weight = $attribute['_weight'];
+        $form_state['category']->attributes[$delta] = $attribute_object;
+      }
+      else {
+        // Update empty attribute.
+        $form_state['category']->attributes[$delta]->name = $attribute['attribute'];
+        $form_state['category']->attributes[$delta]->label = isset($attribute['label']) ? $attribute['label'] : '';
+        $form_state['category']->attributes[$delta]->weight = $attribute['_weight'];
+        $form_state['category']->attributes[$delta]->new = TRUE;
+
+      }
+    }
+  }
 }
 
 /**
  * Form builder; Submit callback to save a category and redirect to list.
  */
 function properties_admin_categories_add($form, &$form_state) {
-  form_state_values_clean($form_state);
-  properties_category_save((object)$form_state['values']);
+  properties_category_save($form_state['category']);
   $form_state['redirect'] = 'admin/config/content/properties/categories';
+  drupal_set_message(t('Category created.'));
+}
+
+/**
+ * Form builder; Submit callback to save a category and redirect to list.
+ */
+function properties_admin_categories_save($form, &$form_state) {
+  properties_category_save($form_state['category']);
+  $form_state['redirect'] = 'admin/config/content/properties/categories';
+  drupal_set_message(t('Category updated.'));
 }
 
 /**
  * Form builder; Submit callback to save a category and stay on form.
  */
 function properties_admin_categories_add_another($form, &$form_state) {
-  form_state_values_clean($form_state);
-  properties_category_save((object)$form_state['values']);
+  properties_category_save($form_state['category']);
+  drupal_set_message(t('Category created.'));
+}
+
+
+/**
+ * Returns HTML for the attributes table in the category table.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form element.
+ *
+ * @ingroup themeable
+ */
+function theme_properties_admin_categories_attributes_form($variables) {
+  $element = $variables['element'];
+  $output = '';
+
+  $table_id = 'attributes-values';
+  $order_class = 'attributes-delta-order';
+  $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required. ') . '">*</span>' : '';
+
+  $header = array(
+    array(
+      'data' => '<label>' . t('!title: !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>",
+      'colspan' => 2,
+      'class' => array('field-label'),
+    ),
+    t('Label'),
+    t('Order'),
+  );
+  $rows = array();
+
+  // Sort items according to '_weight' (needed when the form comes back after
+  // preview or failed validation)
+  $items = array();
+  foreach (element_children($element) as $key) {
+    if ($key === 'add_more') {
+      $add_more_button = &$element[$key];
+    }
+    else {
+      $items[] = &$element[$key];
+    }
+  }
+  usort($items, '_field_sort_items_value_helper');
+
+  // Add the items as table rows.
+  foreach ($items as $key => $item) {
+    $item['_weight']['#attributes']['class'] = array($order_class);
+    $delta_element = drupal_render($item['_weight']);
+
+    $label = drupal_render($item['label']);
+    $cells = array(
+      array('data' => '', 'class' => array('field-multiple-drag')),
+      array('data' => drupal_render($item), 'class' => array('properties-attribute-row-small')),
+      $label,
+      array('data' => $delta_element, 'class' => array('delta-order')),
+    );
+    $rows[] = array(
+      'data' => $cells,
+      'class' => array('draggable'),
+    );
+  }
+
+  $output = '<div class="form-item">';
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
+  $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
+  $output .= '<div class="clearfix">' . drupal_render($add_more_button) . '</div>';
+  $output .= '</div>';
+
+  drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+
+  return $output;
+}
+
+function properties_admin_update_label_js($form, &$form_state) {
+  return $form['attributes'];
+}
+
+
+/**
+ * Submit handler for the "Add another item" button of a field form.
+ *
+ * This handler is run regardless of whether JS is enabled or not. It makes
+ * changes to the form state. If the button was clicked with JS disabled, then
+ * the page is reloaded with the complete rebuilt form. If the button was
+ * clicked with JS enabled, then ajax_form_callback() calls field_add_more_js()
+ * to return just the changed part of the form.
+ */
+function properties_admin_add_more_submit($form, &$form_state) {
+  $attribute = (object)array(
+    'label' => '',
+    'name' => '',
+  );
+
+  $form_state['category']->attributes[] = $attribute;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Ajax callback in response to a new empty widget being added to the form.
+ *
+ * This returns the new page content to replace the page content made obsolete
+ * by the form submission.
+ *
+ * @see field_add_more_submit()
+ */
+function properties_admin_add_more_js($form, $form_state) {
+  $element = $form['attributes'];
+
+  // Add a DIV around the new field to receive the AJAX effect.
+  $delta = $element['#max_delta'];
+  $element[$delta]['#prefix'] = '<div class="ajax-new-content">' . (isset($element[$delta]['#prefix']) ? $element[$delta]['#prefix'] : '');
+  $element[$delta]['#suffix'] = (isset($element[$delta]['#suffix']) ? $element[$delta]['#suffix'] : '') . '</div>';
+
+  return $element;
 }

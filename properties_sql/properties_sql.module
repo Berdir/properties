@@ -75,11 +75,26 @@ function properties_sql_properties_attribute_load_paging($per_page) {
  */
 function properties_sql_properties_category_save($category) {
   db_merge('properties_category')
-  ->key(array('name' => $category->name))
-  ->fields(array(
-      'label' => $category->label,
-  ))
-  ->execute();
+    ->key(array('name' => $category->name))
+    ->fields(array(
+        'label' => $category->label,
+    ))
+    ->execute();
+
+  // First, remove all existing attribute connections.
+  db_delete('properties_category_attribute')
+    ->condition('category_name', $category->name)
+    ->execute();
+
+  $insert = db_insert('properties_category_attribute')
+    ->fields(array('category_name', 'attribute_name'));
+  foreach ($category->attributes as $attribute) {
+    $insert->values(array(
+      'category_name' => $category->name,
+      'attribute_name' => $attribute->name,
+    ));
+  }
+  $insert->execute();
 }
 
 /**
@@ -89,9 +104,13 @@ function properties_sql_properties_category_save($category) {
  *   Category object.
  */
 function properties_sql_properties_category_delete($category) {
-  $num_deleted = db_delete('properties_category')
+  db_delete('properties_category')
   ->condition('name', $category->name)
   ->execute();
+
+  db_delete('properties_category_attribute')
+    ->condition('category_name', $category->name)
+    ->execute();
 }
 
 /**
@@ -112,7 +131,14 @@ function properties_sql_properties_category_load($name) {
  */
 function properties_sql_properties_category_load_multiple($names = array()) {
   $result = db_query("SELECT * FROM {properties_category} WHERE name in (:categories)", array(':categories' => $names));
-  return $result->fetchAllAssoc('name');
+  $categories = $result->fetchAllAssoc('name');
+
+  $result = db_query("SELECT * FROM {properties_category_attribute} pac INNER JOIN {properties_attribute} pa ON pac.attribute_name = pa.name WHERE category_name in (:categories)", array(':categories' => $names));
+  foreach ($result as $attribute) {
+    $categories[$attribute->category_name]->attributes[] = $attribute;
+  }
+
+  return $categories;
 }
 
 /**

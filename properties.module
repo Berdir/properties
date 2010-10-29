@@ -49,6 +49,7 @@ function properties_menu() {
   $items['admin/config/content/properties/attributes/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -20,
   );
 
   $items['admin/config/content/properties/attributes/add'] = array(
@@ -68,7 +69,8 @@ function properties_menu() {
     'file' => 'properties.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('attributes'),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -10,
   );
 
   $items['admin/config/content/properties/attributes/delete/%properties_attribute'] = array(
@@ -78,7 +80,7 @@ function properties_menu() {
     'file' => 'properties.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('attributes'),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/config/content/properties/categories'] = array(
@@ -94,6 +96,7 @@ function properties_menu() {
   $items['admin/config/content/properties/categories/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -20,
   );
 
   $items['admin/config/content/properties/categories/add'] = array(
@@ -106,27 +109,52 @@ function properties_menu() {
     'type' => MENU_LOCAL_ACTION,
   );
 
-  $items['admin/config/content/properties/categories/edit/%'] = array(
+  $items['admin/config/content/properties/categories/edit/%properties_category'] = array(
     'title' => 'Edit category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('properties_admin_categories_form', 6),
     'file' => 'properties.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('categories'),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -10,
   );
 
-  $items['admin/config/content/properties/categories/delete/%'] = array(
+  $items['admin/config/content/properties/categories/delete/%properties_category'] = array(
     'title' => 'Delete category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('properties_admin_categories_delete', 6),
     'file' => 'properties.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('categories'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['properties_autocomplete/%'] = array(
+    'title' => 'Properties autocomplete',
     'type' => MENU_CALLBACK,
+    'page callback' => 'properties_autocomplete_js',
+    'page arguments' => array(1, 2),
+    'access callback' => TRUE,
   );
 
   return $items;
+}
+
+/**
+ * Page callback for autocomplete suggestions.
+ */
+function properties_autocomplete_js($type, $string = NULL) {
+  drupal_json_output((object)drupal_map_assoc(array_keys(properties_attribute_load_paging(10))));
+}
+
+function properties_theme() {
+  return array(
+    'properties_admin_categories_attributes_form' => array(
+      'render element' => 'element',
+      'file' => 'properties.admin.inc',
+    )
+  );
 }
 
 function properties_admin_access($type = NULL) {
@@ -350,6 +378,16 @@ function properties_attribute_load_paging($per_page) {
  *   Category object.
  */
 function properties_category_save($category) {
+  foreach ($category->attributes as $delta => $attribute) {
+    // New attribute, save it first.
+    if (!empty($attribute->new)) {
+      properties_attribute_save($attribute);
+    }
+    // Empty attribute, remove from array.
+    if (empty($attribute->name)) {
+      unset($category->attributes[$delta]);
+    }
+  }
   $function_name = _properties_get_call('category', 'save');
   return $function_name($category);
 }
