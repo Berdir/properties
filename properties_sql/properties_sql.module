@@ -2,3 +2,117 @@
 // $Id$
 
 
+/**
+ * Save an attribute object.
+ *
+ * @param $attribute
+ *   Attribute object.
+ */
+function properties_sql_properties_attribute_save($attribute) {
+  db_merge('properties_attribute')
+    ->key(array('name' => $attribute->name))
+    ->fields(array(
+        'label' => $attribute->label,
+    ))
+    ->execute();
+}
+
+/**
+ * Delete an attribute.
+ *
+ * @param $attribute
+ *   Attribute object.
+ */
+function properties_sql_properties_attribute_delete($attribute) {
+  $num_deleted = db_delete('properties_attribute')
+  ->condition('name', $attribute->name)
+  ->execute();
+}
+
+/**
+ * Load an attribute based on the name.
+ *
+ * @param $name
+ *   Machine readable name of the attribute.
+ */
+function properties_sql_properties_attribute_load($name) {
+  return reset(properties_sql_properties_attribute_load_multiple(array($name)));
+}
+
+/**
+ * Load multiple attributes based on their names.
+ *
+ * @param $names
+ *   Array of machine readable name of the attributes.
+ */
+function properties_sql_properties_attribute_load_multiple($names = array()) {
+  /*$result = db_query("SELECT * FROM {node} WHERE created > :created", array(
+  ':created' => REQUEST_TIME - 3600,
+));*/
+
+}
+
+/**
+ *Load a paged amount of attributes.
+ * @param $per_page
+ *   Number of attributes per page.
+ */
+function properties_sql_properties_attribute_load_paging($per_page) {
+  $function_name = _properties_get_call('attribute', 'load_paging');
+  return $function_name($per_page);
+}
+
+/**
+ * Save an category object.
+ *
+ * @param $category
+ *   Category object.
+ */
+function properties_sql_properties_category_save($category) {
+  $function_name = _properties_get_call('category', 'save');
+  return $function_name($category);
+}
+
+/**
+ * Delete an category.
+ *
+ * @param $category
+ *   Category object.
+ */
+function properties_sql_properties_category_delete($category) {
+  $function_name = _properties_get_call('category', 'delete');
+  return $function_name($category);
+}
+
+/**
+ * Load an category based on the name.
+ *
+ * @param $name
+ *   Machine readable name of the category.
+ */
+function properties_sql_properties_category_load($name) {
+  $function_name = _properties_get_call('category', 'load');
+  return $function_name($name);
+}
+
+/**
+ * Load multiple categories based on their names.
+ *
+ * @param $names
+ *   Array of machine readable name of the categories.
+ */
+function properties_sql_properties_category_load_multiple($names = array()) {
+  $function_name = _properties_get_call('category', 'load_multiple');
+  return $function_name($names);
+
+}
+
+/**
+ *Load a paged amount of categories.
+ * @param $per_page
+ *   Number of categories per page.
+ */
+function properties_sql_properties_category_load_paging($per_page) {
+  $function_name = _properties_get_call('category', 'load_paging');
+  return $function_name($per_page);
+}

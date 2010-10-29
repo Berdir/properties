@@ -5,8 +5,10 @@
  * @file
  * Install file for properties_sql.module
  */
- 
- 
+
+/**
+ * Database schema for properties_sql
+ */
 function properties_sql_schema() {
   $schema = array();
 
