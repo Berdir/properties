@@ -18,7 +18,7 @@ function properties_sql_schema() {
     'fields'        => array(
       'pcid'    => array(
         'description'   => '{properties_category} categories primary key',
-        'type'          => 'int',
+        'type'          => 'serial',
         'not null'      => TRUE,
         'unsigned'      => TRUE,
       ),
@@ -49,7 +49,7 @@ function properties_sql_schema() {
     'fields'        => array(
       'paid'    => array(
         'description'   => '{properties_attribute} attribute primary key',
-        'type'          => 'int',
+        'type'          => 'serial',
         'not null'      => TRUE,
         'unsigned'      => TRUE,
       ),
@@ -114,7 +114,7 @@ function properties_sql_schema() {
     'fields'        => array(
       'ptid'    => array(
         'description'   => '{properties_template} template primary key',
-        'type'          => 'int',
+        'type'          => 'serial',
         'not null'      => TRUE,
         'unsigned'      => TRUE,
       ),
