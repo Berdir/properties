@@ -16,12 +16,6 @@ function properties_sql_schema() {
   $schema['properties_category'] = array(
     'description'       => '{properties_category} holds category machine_names and corresponding labels',
     'fields'        => array(
-      'pcid'    => array(
-        'description'   => '{properties_category} categories primary key',
-        'type'          => 'serial',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
-      ),
       'name' => array(
         'description'   => 'machine_name of the category',
         'type' => 'varchar',
@@ -37,22 +31,13 @@ function properties_sql_schema() {
         'default' => ''
       ),
     ),
-    'primary key'     => array('pcid'),
-    'unique keys'         => array(
-      'name'               => array('name'),
-    ),
+    'primary key'     => array('name'),
   );
 
   // 'properties_attribute' table
   $schema['properties_attribute'] = array(
     'description'       => '{properties_attribute} holds category names and labels',
     'fields'        => array(
-      'paid'    => array(
-        'description'   => '{properties_attribute} attribute primary key',
-        'type'          => 'serial',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
-      ),
       'name' => array(
         'description'   => 'machine_name of the attribute',
         'type' => 'varchar',
@@ -68,10 +53,7 @@ function properties_sql_schema() {
         'default' => ''
       ),
     ),
-    'primary key'     => array('paid'),
-    'unique keys'         => array(
-      'name'               => array('name'),
-    ),
+    'primary key'     => array('name'),
   );
 
 
@@ -79,31 +61,33 @@ function properties_sql_schema() {
   $schema['properties_category_attribute'] = array(
     'description'       => '{properties_category_attribute} connects attributes with a category',
     'fields'        => array(
-      'pcid'    => array(
+      'category_name' => array(
         'description'   => 'refers to category',
-        'type'          => 'int',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'paid'    => array(
+      'attribute_name' => array(
         'description'   => 'refers to attribute',
-        'type'          => 'int',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
       ),
     ),
     'foreign keys' => array(
       'attributes_category' => array(
         'table' => 'properties_category',
-        'columns' => array('pcid' => 'pcid'),
+        'columns' => array('name' => 'category_name'),
         ),
       'categories_attribute' => array(
         'table' => 'properties_attribute',
-        'columns' => array('paid' => 'paid')
+        'columns' => array('name' => 'attribute_name')
         ),
        ),
 
-    'primary key'     => array('pcid','paid'),
+    'primary key'     => array('category_name','attribute_name'),
 
   );
 
@@ -112,12 +96,6 @@ function properties_sql_schema() {
   $schema['properties_template'] = array(
     'description'       => '{properties_template} holds category names and labels',
     'fields'        => array(
-      'ptid'    => array(
-        'description'   => '{properties_template} template primary key',
-        'type'          => 'serial',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
-      ),
       'name' => array(
         'description'   => 'machine_name of the template',
         'type' => 'varchar',
@@ -133,41 +111,41 @@ function properties_sql_schema() {
         'default' => ''
       ),
     ),
-    'primary key'     => array('ptid'),
-    'unique keys'         => array(
-      'name'               => array('name'),
-    ),
+    'primary key'     => array('name'),
   );
 
   // 'properties_template_category' table (intermediate table)
   $schema['properties_template_category'] = array(
     'description'       => '{properties_template_category} connects categories with a template',
     'fields'        => array(
-      'ptid'    => array(
-        'description'   => 'refers to category',
-        'type'          => 'int',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
+      'template_name' => array(
+        'description'   => 'refers to template',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
       ),
-      'pcid'    => array(
+      'category_name' => array(
         'description'   => 'refers to category',
-        'type'          => 'int',
-        'not null'      => TRUE,
-        'unsigned'      => TRUE,
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
       ),
+
     ),
     'foreign keys' => array(
       'templates_category' => array(
         'table' => 'properties_template',
-        'columns' => array('ptid' => 'ptid'),
+        'columns' => array('name' => 'template_name'),
         ),
       'category_templates' => array(
         'table' => 'properties_category',
-        'columns' => array('pcid' => 'pcid')
+        'columns' => array('name' => 'category_name')
         ),
        ),
 
-    'primary key'     => array('ptid','pcid'),
+    'primary key'     => array('template_name','category_name'),
 
   );
 
