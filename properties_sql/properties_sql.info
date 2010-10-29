@@ -1,0 +1,8 @@
+; $Id$
+name = Dynamic Properties SQL
+description = This module implements the attribute and category API with a SQL backend.
+core = 7.x
+dependencies[] = properties
+files[] = properties_sql.module
+files[] = properties_sql.install
+files[] = properties_sql.test
