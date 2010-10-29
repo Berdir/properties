@@ -56,8 +56,15 @@ function properties_sql_properties_attribute_load_multiple($names = array()) {
  *   Number of attributes per page.
  */
 function properties_sql_properties_attribute_load_paging($per_page) {
-  $function_name = _properties_get_call('attribute', 'load_paging');
-  return $function_name($per_page);
+
+  $query = db_select('properties_attribute','pa')->extend('PagerDefault');
+
+  return $query
+    ->fields('pa')
+    ->limit($per_page)
+    ->execute()
+    ->fetchAllAssoc('name');
+
 }
 
 /**
@@ -67,8 +74,12 @@ function properties_sql_properties_attribute_load_paging($per_page) {
  *   Category object.
  */
 function properties_sql_properties_category_save($category) {
-  $function_name = _properties_get_call('category', 'save');
-  return $function_name($category);
+  db_merge('properties_category')
+  ->key(array('name' => $category->name))
+  ->fields(array(
+      'label' => $category->label,
+  ))
+  ->execute();
 }
 
 /**
@@ -78,8 +89,9 @@ function properties_sql_properties_category_save($category) {
  *   Category object.
  */
 function properties_sql_properties_category_delete($category) {
-  $function_name = _properties_get_call('category', 'delete');
-  return $function_name($category);
+  $num_deleted = db_delete('properties_category')
+  ->condition('name', $category->name)
+  ->execute();
 }
 
 /**
@@ -89,8 +101,7 @@ function properties_sql_properties_category_delete($category) {
  *   Machine readable name of the category.
  */
 function properties_sql_properties_category_load($name) {
-  $function_name = _properties_get_call('category', 'load');
-  return $function_name($name);
+  return reset(properties_sql_properties_category_load_multiple(array($name)));
 }
 
 /**
@@ -100,9 +111,8 @@ function properties_sql_properties_category_load($name) {
  *   Array of machine readable name of the categories.
  */
 function properties_sql_properties_category_load_multiple($names = array()) {
-  $function_name = _properties_get_call('category', 'load_multiple');
-  return $function_name($names);
-
+  $result = db_query("SELECT * FROM {properties_category} WHERE name in (:categories)", array(':categories' => $names));
+  return $result->fetchAllAssoc('name');
 }
 
 /**
@@ -111,6 +121,11 @@ function properties_sql_properties_category_load_multiple($names = array()) {
  *   Number of categories per page.
  */
 function properties_sql_properties_category_load_paging($per_page) {
-  $function_name = _properties_get_call('category', 'load_paging');
-  return $function_name($per_page);
+  $query = db_select('properties_category','pc')->extend('PagerDefault');
+
+  return $query
+    ->fields('pc')
+    ->limit($per_page)
+    ->execute()
+    ->fetchAllAssoc('name');
 }
