@@ -4,4 +4,5 @@ description = Provides a dynamic property field that can contain an unlimited nu
 core = 7.x
 files[] = properties.module
 files[] = properties.test
+dependencies[] = properties_sql
 

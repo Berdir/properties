@@ -138,6 +138,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
         'label' => '',
         'name' => '',
         'attributes' => array(),
+        'new' => TRUE,
       );
     }
 
@@ -165,7 +166,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
     '#type' => 'machine_name',
     '#default_value' => $form_state['category']->name,
     '#maxlength' => 32,
-    '#disabled' => !empty($form_state['category']->name),
+    '#disabled' => empty($form_state['category']->new),
     '#machine_name' => array(
       'exists' => 'properties_category_load',
     ),
@@ -230,7 +231,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
     '#name' => 'attributes_add_more',
     '#value' => t('Add another attribute'),
     '#attributes' => array('class' => array('field-add-more-submit')),
-    //'#limit_validation_errors' => array(array('name')),
+    '#limit_validation_errors' => array(array('attributes')),
     '#submit' => array('properties_admin_add_more_submit'),
     '#ajax' => array(
       'callback' => 'properties_admin_add_more_js',
@@ -289,6 +290,14 @@ function properties_admin_categories_form_validate($form, &$form_state) {
         $form_state['category']->attributes[$delta]->weight = $attribute['_weight'];
         $form_state['category']->attributes[$delta]->new = TRUE;
 
+        // If label is empty, add validation error.
+        if (empty($form_state['category']->attributes[$delta]->label)) {
+          // Not possible to do this as a proper form validation step because
+          // the form is not rebuilt in case of validation errors.
+          //form_set_error('attributes[' . $delta . '][label]', t('Attribute does not exist, label is required.'));
+          drupal_set_message(t('Attribute %name does not exist, a label must be provided to create it.', array('%name' => $attribute['attribute'])), 'error');
+          $form_state['rebuild'] = TRUE;
+        }
       }
     }
   }
