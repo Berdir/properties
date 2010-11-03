@@ -6,11 +6,37 @@
  * Contains tests for the properties.module
  */
 
+class PropertiesBaseTestCase extends DrupalWebTestCase {
+
+  /**
+   * Create an attribute through the administration interface, load and return it.
+   *
+   * @param $name
+   *   machine_name of the attribute, a random name is generated when left empty.
+   * @param $label
+   *   Label of the attribute, a random label is generated when left empty.
+   *
+   * @return
+   *   Loaded attribute object.
+   */
+  protected function createAttribute($name = NULL, $label = NULL) {
+    $attribute = array(
+      'name' => empty($name) ? strtolower($this->randomName(8)) : $name,
+      'label' => empty($label) ? $this->randomName(20) : $label,
+    );
+    $this->drupalPost('admin/config/content/properties/attributes/add', $attribute, t('Add'));
+    $this->assertText(t('Attribute created.'));
+    $attribute = properties_attribute_load($attribute['name']);
+    $this->assertNotNull($attribute, t('Attribute loaded.'));
+    return $attribute;
+  }
+}
+
 
 /**
  * Tests for fields integration.
  */
-class PropertiesTestCase extends DrupalWebTestCase {
+class PropertiesTestCase extends PropertiesBaseTestCase {
   /**
    * Implementation of getInfo().
    */
@@ -57,15 +83,13 @@ class PropertiesTestCase extends DrupalWebTestCase {
     $this->assertText($node['field_' . $name . '[und][0][attribute]'], t('Content of new field is displayed.'));
     $this->assertText($node['field_' . $name . '[und][0][value]'], t('Content of new field is displayed.'));
     $this->assertText($node['field_' . $name . '[und][0][category]'], t('Content of new field is displayed.'));
-
   }
 }
-
 
 /**
  * Tests for fields integration.
  */
-class PropertiesAdministrationTestCase extends DrupalWebTestCase {
+class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
   /**
    * Implementation of getInfo().
    */
@@ -82,41 +106,37 @@ class PropertiesAdministrationTestCase extends DrupalWebTestCase {
     parent::setUp('properties', 'properties_sql');
   }
 
-  public function testCreating()
-  {
+  public function testCreating() {
     $admin = $this->drupalCreateUser(array('administer properties categories', 'administer properties attributes'));
     $this->drupalLogin($admin);
 
     // Create 5 properties.
     $attributes = array();
     for ($i = 0; $i < 5; $i++) {
-      $attributes[$i]['name'] = strtolower($this->randomName(8));
-      $attributes[$i]['label'] = $this->randomName(20);
-      $this->drupalPost('admin/config/content/properties/attributes/add', $attributes[$i], t('Add'));
-      $this->assertText(t('Attribute created.'));
+      $attributes[$i] = $this->createAttribute();
     }
 
     // Create a category.
     $category = array(
       'name' => strtolower($this->randomName(8)),
       'label' => $this->randomName(20),
-      'attributes[0][attribute]' => $attributes[3]['name'],
+      'attributes[0][attribute]' => $attributes[3]->name,
     );
 
     // Add another attribute.
     $this->drupalPost('admin/config/content/properties/categories/add', $category, t('Add another attribute'));
 
     // Assert that label has been inserted.
-    $this->assertText($attributes[3]['label']);
+    $this->assertText($attributes[3]->label);
 
     // And another one.
     $next_attribute = array(
-      'attributes[1][attribute]' => $attributes[1]['name'],
+      'attributes[1][attribute]' => $attributes[1]->name,
     );
     $this->drupalPost(NULL, $next_attribute, t('Add another attribute'));
 
     // Assert that label has been inserted.
-    $this->assertText($attributes[1]['label']);
+    $this->assertText($attributes[1]->label);
 
     // Add a new attribute, try to submit.
     $new_attribute = array(
@@ -126,14 +146,14 @@ class PropertiesAdministrationTestCase extends DrupalWebTestCase {
     $this->assertText(t('Attribute @name does not exist, a label must be provided to create it.', array('@name' => $name)));
 
     $label = array(
-      'attributes[2][label]' => $label = $this->randomName(20),
+      'attributes[2][label]' => $new_label = $this->randomName(20),
     );
     $this->drupalPost(NULL, $label, t('Add'));
     $this->assertText(t('Category created.'));
 
     // Verify that new attribute has been created.
     $this->drupalGet('admin/config/content/properties/attributes');
-    $this->assertText($label);
+    $this->assertText($new_label);
     $this->assertText($name);
   }
 }
