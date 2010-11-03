@@ -1,6 +1,10 @@
 <?php
-
 // $Id$
+
+/**
+ * @file
+ * Contains admin menu callbacks for properties.module.
+ */
 
 /**
  * Menu callback; Display a list of categories.
@@ -10,9 +14,9 @@ function properties_admin_categories_list() {
 
   $header = array(t('Name'), t('Label'), t('Operations'));
   $rows = array();
+  $url_options = array('query' => drupal_get_destination());
   foreach ($categories as $category) {
-
-    $links = array(l('edit', 'admin/config/content/properties/categories/edit/' . $category->name), l('delete', 'admin/config/content/properties/categories/delete/' . $category->name));
+    $links = array(l('edit', 'admin/config/content/properties/categories/edit/' . $category->name, $url_options), l('delete', 'admin/config/content/properties/categories/delete/' . $category->name, $url_options));
 
     $rows[] = array(
       $category->name,
@@ -31,9 +35,9 @@ function properties_admin_attributes_list() {
 
   $header = array(t('Name'), t('Label'), t('Operations'));
   $rows = array();
+  $url_options = array('query' => drupal_get_destination());
   foreach ($attributes as $attribute) {
-
-    $links = array(l('edit', 'admin/config/content/properties/attributes/edit/' . $attribute->name), l('delete', 'admin/config/content/properties/attributes/delete/' . $attribute->name));
+    $links = array(l('edit', 'admin/config/content/properties/attributes/edit/' . $attribute->name, $url_options), l('delete', 'admin/config/content/properties/attributes/delete/' . $attribute->name, $url_options));
 
     $rows[] = array(
       $attribute->name,
@@ -441,4 +445,48 @@ function properties_admin_add_more_js($form, $form_state) {
   $element[$delta]['#suffix'] = (isset($element[$delta]['#suffix']) ? $element[$delta]['#suffix'] : '') . '</div>';
 
   return $element;
+}
+
+/**
+ * Form builder function; Provide a confirmation form to delete an attribute.
+ *
+ * @see properties_admin_attributes_delete_submit()
+ */
+function properties_admin_attributes_delete($form, &$form_state, $attribute) {
+  $form['attribute'] = array(
+    '#type' => 'value',
+    '#value' => $attribute,
+  );
+
+  return confirm_form($form, t('Delete attribute %attribute', array('%attribute' => $attribute->label)), '');
+}
+
+/**
+ * Submit handler to delete an attribute.
+ */
+function properties_admin_attributes_delete_submit($form, &$form_state) {
+  properties_attribute_delete($form_state['values']['attribute']);
+  drupal_set_message(t('Attribute deleted.'));
+}
+
+/**
+ * Form builder function; Provide a confirmation form to delete a category.
+ *
+ * @see properties_admin_categories_delete_submit()
+ */
+function properties_admin_categories_delete($form, &$form_state, $category) {
+  $form['category'] = array(
+    '#type' => 'value',
+    '#value' => $category,
+  );
+
+  return confirm_form($form, t('Delete category %category', array('%category' => $category->label)), '');
+}
+
+/**
+ * Submit handler to delete a category.
+ */
+function properties_admin_categories_delete_submit($form, &$form_state) {
+  properties_category_delete($form_state['values']['category']);
+  drupal_set_message(t('Category deleted.'));
 }
