@@ -307,7 +307,12 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
   // Retrieve any values set in $form_state, as will be the case during AJAX
   // rebuilds of this form.
   if (isset($form_state['values'][$field['field_name']][$langcode])) {
-    $items = $form_state['values'][$field['field_name']][$langcode];
+    $items = array();
+    foreach ($form_state['values'][$field['field_name']][$langcode] as $key => $item) {
+      if (is_int($key) && is_array($item)) {
+        $items[$key] = $item;
+      }
+    }
     unset($form_state['values'][$field['field_name']][$langcode]);
   }
 
@@ -325,7 +330,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
 
   $categories = array();
   foreach ($items as $item) {
-    if (!empty($item['category']) && !isset($categories[$item['category']])) {
+    if (is_array($item) && !empty($item['category']) && !isset($categories[$item['category']])) {
       $categories[$item['category']] = properties_category_load($item['category'])->label;
     }
   }
@@ -411,13 +416,17 @@ function properties_widget_add_category_submit($form, &$form_state) {
    $field_name = $form_state['triggering_element']['#parents'][0];
    $langcode = $form[$field_name]['#language'];
    $values = reset($form_state['values'][$field_name]);
-   $category = properties_category_load($values['new_category']);
-   if (!empty($category)) {
-     $form_state[$field_name]['new_category'] = $category;
-     form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
-   }
-   else {
-     form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
+
+   dpm($values);
+   if (!isset($values['categories'][$values['new_category']])) {
+     $category = properties_category_load($values['new_category']);
+     if (!empty($category)) {
+       $form_state[$field_name]['new_category'] = $category;
+       form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
+     }
+     else {
+       form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
+     }
    }
    $form_state['rebuild'] = TRUE;
 }
