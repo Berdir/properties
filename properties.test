@@ -56,7 +56,7 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
     parent::setUp('properties');
   }
 
-  function dtestPropertyFieldCreation() {
+  function testPropertyFieldCreation() {
     $admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content'));
     $this->drupalLogin($admin);
 
