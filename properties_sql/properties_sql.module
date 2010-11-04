@@ -55,16 +55,20 @@ function properties_sql_properties_attribute_load_multiple($names = array()) {
  * @param $per_page
  *   Number of attributes per page.
  */
-function properties_sql_properties_attribute_load_paging($per_page) {
-
-  $query = db_select('properties_attribute','pa')->extend('PagerDefault');
-
-  return $query
+function properties_sql_properties_attribute_load_paging($per_page, array $options = array()) {
+  $query = db_select('properties_attribute','pa')->extend('PagerDefault')
     ->fields('pa')
-    ->limit($per_page)
+    ->limit($per_page);
+
+  if (!empty($options['search'])) {
+    $query->condition(db_or()
+      ->condition('name', $options['search'] . '%', 'LIKE')
+      ->condition('label', $options['search'] . '%', 'LIKE')
+    );
+  }
+  return $query
     ->execute()
     ->fetchAllAssoc('name');
-
 }
 
 /**
@@ -146,12 +150,18 @@ function properties_sql_properties_category_load_multiple($names = array()) {
  * @param $per_page
  *   Number of categories per page.
  */
-function properties_sql_properties_category_load_paging($per_page) {
-  $query = db_select('properties_category','pc')->extend('PagerDefault');
-
-  return $query
+function properties_sql_properties_category_load_paging($per_page, array $options = array()) {
+  $query = db_select('properties_category','pc')->extend('PagerDefault')
     ->fields('pc')
-    ->limit($per_page)
+    ->limit($per_page);
+
+  if (!empty($options['search'])) {
+    $query->condition(db_or()
+      ->condition('name', $options['search'] . '%', 'LIKE')
+      ->condition('label', $options['search'] . '%', 'LIKE')
+    );
+  }
+  return $query
     ->execute()
     ->fetchAllAssoc('name');
 }

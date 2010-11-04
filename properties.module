@@ -145,9 +145,22 @@ function properties_menu() {
  * Page callback for autocomplete suggestions.
  */
 function properties_autocomplete_js($type, $string = NULL) {
-  drupal_json_output((object)drupal_map_assoc(array_keys(properties_attribute_load_paging(10))));
+  $function = 'properties_' . $type . '_load_paging';
+  if (!function_exists($function)) {
+    return;
+  }
+  $suggestions = $function(10, array('search' => $string));
+
+  $json_suggestions = array();
+  foreach ($suggestions as $suggestion) {
+    $json_suggestions[$suggestion->name] = t('@name (@label)', array('@name' => $suggestion->name, '@label' => $suggestion->label));
+  }
+  drupal_json_output((object)$json_suggestions);
 }
 
+/**
+ * Implements hook_theme().
+ */
 function properties_theme() {
   return array(
     'properties_admin_categories_attributes_form' => array(
@@ -157,6 +170,15 @@ function properties_theme() {
   );
 }
 
+/**
+ * Check access to an administration page.
+ *
+ * @param $type
+ *   Either categories or attributes.
+ *
+ * @return
+ *   TRUE if access is allowed.
+ */
 function properties_admin_access($type = NULL) {
   if (empty($type)) {
     return user_access('administer properties attributes') || user_access('administer properties categories');
@@ -366,9 +388,9 @@ function properties_attribute_load_multiple($names = array()) {
  * @param $per_page
  *   Number of attributes per page.
  */
-function properties_attribute_load_paging($per_page) {
+function properties_attribute_load_paging($per_page, array $options = array()) {
   $function_name = _properties_get_call('attribute', 'load_paging');
-  return $function_name($per_page);
+  return $function_name($per_page, $options);
 }
 
 /**
@@ -431,7 +453,7 @@ function properties_category_load_multiple($names = array()) {
  * @param $per_page
  *   Number of categories per page.
  */
-function properties_category_load_paging($per_page) {
+function properties_category_load_paging($per_page, array $options = array()) {
   $function_name = _properties_get_call('category', 'load_paging');
-  return $function_name($per_page);
+  return $function_name($per_page, $options);
 }

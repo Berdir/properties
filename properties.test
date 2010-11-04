@@ -56,7 +56,7 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
     parent::setUp('properties');
   }
 
-  function testPropertyFieldCreation() {
+  function dtestPropertyFieldCreation() {
     $admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content'));
     $this->drupalLogin($admin);
 
@@ -83,6 +83,43 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
     $this->assertText($node['field_' . $name . '[und][0][attribute]'], t('Content of new field is displayed.'));
     $this->assertText($node['field_' . $name . '[und][0][value]'], t('Content of new field is displayed.'));
     $this->assertText($node['field_' . $name . '[und][0][category]'], t('Content of new field is displayed.'));
+  }
+
+  /**
+   * Test autocomplete functionality.
+   */
+  function testAutocomplete() {
+    $admin = $this->drupalCreateUser(array('administer properties categories', 'administer properties attributes'));
+    $this->drupalLogin($admin);
+    $this->createAttribute('aaname', 'ccclabel');
+    $this->createAttribute('abname', 'ccblabel');
+    $this->createAttribute('bcname', 'efglabel');
+
+    $this->drupalGet('properties_autocomplete/attribute/a');
+    $json = drupal_json_decode($this->drupalGetContent());
+    $this->assertEqual(2, count($json));
+    $this->assertEqual($json['aaname'], t('@name (@label)', array('@name' => 'aaname', '@label' => 'ccclabel')));
+    $this->assertEqual($json['abname'], t('@name (@label)', array('@name' => 'abname', '@label' => 'ccblabel')));
+
+    $this->drupalGet('properties_autocomplete/attribute/aa');
+    $json = drupal_json_decode($this->drupalGetContent());
+    $this->assertEqual(1, count($json));
+    $this->assertEqual($json['aaname'], t('@name (@label)', array('@name' => 'aaname', '@label' => 'ccclabel')));
+
+    $this->drupalGet('properties_autocomplete/attribute/cc');
+    $json = drupal_json_decode($this->drupalGetContent());
+    $this->assertEqual(2, count($json));
+    $this->assertEqual($json['aaname'], t('@name (@label)', array('@name' => 'aaname', '@label' => 'ccclabel')));
+    $this->assertEqual($json['abname'], t('@name (@label)', array('@name' => 'abname', '@label' => 'ccblabel')));
+
+    $this->drupalGet('properties_autocomplete/attribute/ef');
+    $json = drupal_json_decode($this->drupalGetContent());
+    $this->assertEqual(1, count($json));
+    $this->assertEqual($json['bcname'], t('@name (@label)', array('@name' => 'bcname', '@label' => 'efglabel')));
+
+    $this->drupalGet('properties_autocomplete/attribute/none');
+    $json = drupal_json_decode($this->drupalGetContent());
+    $this->assertEqual(0, count($json));
   }
 }
 
