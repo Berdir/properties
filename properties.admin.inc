@@ -147,12 +147,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
     }
 
     // Add an empty attribute.
-    $attribute = (object) array(
-      'label' => '',
-      'name' => '',
-    );
-    $category->attributes[] = $attribute;
-
+    $category->attributes[] = properties_empty_attribute();
     $form_state['category'] = $category;
   }
 
@@ -178,7 +173,6 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
   );
 
   $attributes = array();
-  $delta = 0;
   $max = count($form_state['category']->attributes);
   foreach ($form_state['category']->attributes as $delta => $attribute) {
     $element = array();
@@ -222,6 +216,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
   }
 
   $attributes += array(
+    '#type' => 'fieldset',
     '#theme' => 'properties_admin_categories_attributes_form',
     '#title' => t('Attributes'),
     '#description' => t('Configure the default attributes of this category.'),

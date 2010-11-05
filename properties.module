@@ -1,4 +1,5 @@
 <?php
+
 // $Id$
 
 /**
@@ -145,18 +146,44 @@ function properties_menu() {
  * Page callback for autocomplete suggestions.
  */
 function properties_autocomplete_js($type, $string = NULL) {
-  drupal_json_output((object)drupal_map_assoc(array_keys(properties_attribute_load_paging(10))));
+  $function = 'properties_' . $type . '_load_paging';
+  if (!function_exists($function)) {
+    return;
+  }
+  $suggestions = $function(10, array('search' => $string));
+
+  $json_suggestions = array();
+  foreach ($suggestions as $suggestion) {
+    $json_suggestions[$suggestion->name] = t('@name (@label)', array('@name' => $suggestion->name, '@label' => $suggestion->label));
+  }
+  drupal_json_output((object) $json_suggestions);
 }
 
+/**
+ * Implements hook_theme().
+ */
 function properties_theme() {
   return array(
     'properties_admin_categories_attributes_form' => array(
       'render element' => 'element',
       'file' => 'properties.admin.inc',
-    )
+    ),
+    'properties_properties_form' => array(
+      'render element' => 'element',
+      'template' => 'properties-properties-form',
+    ),
   );
 }
 
+/**
+ * Check access to an administration page.
+ *
+ * @param $type
+ *   Either categories or attributes.
+ *
+ * @return
+ *   TRUE if access is allowed.
+ */
 function properties_admin_access($type = NULL) {
   if (empty($type)) {
     return user_access('administer properties attributes') || user_access('administer properties categories');
@@ -243,16 +270,26 @@ function properties_field_formatter_info() {
  * Implements hook_field_widget_info().
  */
 function properties_field_widget_info() {
-    return array(
+  return array(
     'properties_table' => array(
       'label' => t('Properties table'),
       'field types' => array('properties'),
       'settings' => array(),
       'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-        'default value' => FIELD_BEHAVIOR_DEFAULT,
+        'multiple values' => FIELD_BEHAVIOR_CUSTOM,
+        'default value' => FIELD_BEHAVIOR_NONE,
       ),
     ),
+  );
+}
+
+/**
+ * Returns an empty attribute object.
+ */
+function properties_empty_attribute() {
+  return (object) array(
+    'label' => '',
+    'name' => '',
   );
 }
 
@@ -260,22 +297,168 @@ function properties_field_widget_info() {
  * Implements hook_field_widet_form().
  */
 function properties_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $element['attribute'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Attribute'),
-    '#default_value' => isset($items[$delta]['attribute']) ? $items[$delta]['attribute'] : '',
+  $elements = array();
+
+  drupal_add_css(drupal_get_path('module', 'properties') . '/properties.css');
+
+  if (empty($form_state[$field['field_name']])) {
+    $form_state[$field['field_name']]['categories'] = array();
+  }
+  $categories = &$form_state[$field['field_name']]['categories'];
+
+  // Retrieve any values set in $form_state, as will be the case during AJAX
+  // rebuilds of this form.
+  if (isset($form_state['values'][$field['field_name']][$langcode]['listing'])) {
+    foreach ($form_state['values'][$field['field_name']][$langcode]['listing'] as $category) {
+      $categories[$category['name']]['_weight'] = $category['_weight'];
+      $categories[$category['name']]['properties'] = $category['properties'];
+    }
+    unset($form_state['values'][$field['field_name']][$langcode]['listing']);
+  }
+
+  // Check if we need to load a new category.
+  if (!empty($form_state[$field['field_name']]['new_category'])) {
+    $new_category = $form_state[$field['field_name']]['new_category'];
+    $categories[$new_category->name] = array(
+      '_weight' => count($categories),
+      'category' => $new_category,
+      'properties' => array(),
+    );
+    foreach ($new_category->attributes as $property) {
+      $categories[$new_category->name]['properties'][] = array(
+        'attribute' => $property->name,
+        'category' => $form_state[$field['field_name']]['new_category']->name,
+        'value' => '',
+        '_weight' => count($categories[$new_category->name]['properties']),
+      );
+    }
+    unset($form_state[$field['field_name']]['new_category']);
+  }
+
+  uasort($categories, '_field_sort_items_helper');
+  $category_list = array();
+  foreach ($categories as $category_name => $item) {
+    $category_list[$item['category']->name] = $item['category']->label;
+  }
+
+  $elements['listing'] = array();
+  foreach ($categories as $category_name => $category) {
+    $elements['listing'][$category_name]['#label'] = $category['category']->label;
+    // Only used to trick tabledrag.js.
+    $elements['listing'][$category_name]['category'] = array(
+      '#type' => 'hidden',
+      '#value' => '',
+    );
+
+    $elements['listing'][$category_name]['name'] = array(
+      '#type' => 'hidden',
+      '#value' => $category['category']->name,
+    );
+
+    $elements['listing'][$category_name]['_weight'] = array(
+      '#type' => 'weight',
+      '#title' => t('Weight for category @category', array('@category' => $category['category']->label)),
+      '#title_display' => 'invisible',
+      '#default_value' => $category['_weight'],
+      '#weight' => 100,
+    );
+
+    usort($category['properties'], '_field_sort_items_helper');
+    foreach ($category['properties'] as $delta => $property) {
+      $element = array();
+      $element['category'] = array(
+        '#type' => 'select',
+        '#default_value' => $property['category'],
+        '#options' => $category_list,
+      );
+      $element['attribute'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $property['attribute'],
+        '#autocomplete_path' => 'properties_autocomplete/attribute',
+        '#maxlength' => 255,
+        '#size' => 32,
+        '#ajax' => array(
+          'callback' => 'properties_admin_update_label_js',
+          'wrapper' => 'attributes-wrapper',
+          'effect' => 'fade',
+        ),
+      );
+      $element['label'] = array(
+        '#markup' => !empty($property['attribute']) ? $category['category']->attributes[$property['attribute']]->label : '',
+      );
+
+      $element['value'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $property['value'],
+        '#maxlength' => 255,
+      );
+
+      $element['_weight'] = array(
+        '#type' => 'weight',
+        '#title' => t('Weight for row @number', array('@number' => $delta)),
+        '#title_display' => 'invisible',
+        '#default_value' => $property['_weight'],
+        '#weight' => 100,
+      );
+      $elements['listing'][$category_name]['properties'][$delta] = $element;
+    }
+  }
+
+  $id = 'properties-' . drupal_html_id($field['field_name']) . '-wrapper';
+
+  $elements += array(
+    '#type' => 'fieldset',
+    '#theme' => 'properties_properties_form',
+    '#title' => t('Properties'),
+    '#description' => t('Add properties to this content. Start by adding categories to it.'),
+    '#prefix' => '<div id="' . $id . '">',
+    '#suffix' => '</div>',
+    '#max_delta' => $delta,
+    '#tree' => TRUE,
   );
-  $element['value'] = array(
+  $elements['new_category'] = array(
     '#type' => 'textfield',
-    '#title' => t('Value'),
-    '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : '',
+    '#default_value' => '',
+    '#autocomplete_path' => 'properties_autocomplete/category',
+    '#maxlength' => 255,
+    '#size' => 32,
   );
-  $element['category'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Category'),
-    '#default_value' => isset($items[$delta]['category']) ? $items[$delta]['category'] : '',
+  $elements['add_more'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add category'),
+    '#attributes' => array('class' => array('field-add-more-submit')),
+    '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+    '#submit' => array('properties_widget_add_category_submit'),
+    '#ajax' => array(
+      'callback' => 'properties_widget_add_category_js',
+      'wrapper' => $id,
+      'effect' => 'fade',
+    ),
   );
-  return $element;
+  return $elements;
+}
+
+function properties_widget_add_category_submit($form, &$form_state) {
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  $langcode = $form[$field_name]['#language'];
+  $values = reset($form_state['values'][$field_name]);
+
+  if (!isset($form_state[$field_name]['categories'][$values['new_category']])) {
+    $category = properties_category_load($values['new_category']);
+    if (!empty($category)) {
+      $form_state[$field_name]['new_category'] = $category;
+      form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
+    }
+    else {
+      form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
+    }
+  }
+  $form_state['rebuild'] = TRUE;
+}
+
+function properties_widget_add_category_js($form, $form_state) {
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  return $form[$field_name];
 }
 
 /**
@@ -358,17 +541,16 @@ function properties_attribute_load($name) {
 function properties_attribute_load_multiple($names = array()) {
   $function_name = _properties_get_call('attribute', 'load_multiple');
   return $function_name($names);
-
 }
 
 /**
- *Load a paged amount of attributes.
+ * Load a paged amount of attributes.
  * @param $per_page
  *   Number of attributes per page.
  */
-function properties_attribute_load_paging($per_page) {
+function properties_attribute_load_paging($per_page, array $options = array()) {
   $function_name = _properties_get_call('attribute', 'load_paging');
-  return $function_name($per_page);
+  return $function_name($per_page, $options);
 }
 
 /**
@@ -423,15 +605,14 @@ function properties_category_load($name) {
 function properties_category_load_multiple($names = array()) {
   $function_name = _properties_get_call('category', 'load_multiple');
   return $function_name($names);
-
 }
 
 /**
- *Load a paged amount of categories.
+ * Load a paged amount of categories.
  * @param $per_page
  *   Number of categories per page.
  */
-function properties_category_load_paging($per_page) {
+function properties_category_load_paging($per_page, array $options = array()) {
   $function_name = _properties_get_call('category', 'load_paging');
-  return $function_name($per_page);
+  return $function_name($per_page, $options);
 }
