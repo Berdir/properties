@@ -1,7 +1,7 @@
-div#properties-field-properties-wrapper div.form-item-field-properties-und-new-category, input.field-add-more-submit {
+div.inline div, div.inline input {
     float: left;
 }
 
-div#properties-field-properties-wrapper div.form-item-field-properties-und-new-category {
+div.inline div.form-item {
     padding: 10px;
 }

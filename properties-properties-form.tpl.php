@@ -58,7 +58,8 @@ foreach (element_children($element['listing']) as $category_name) {
 
 $output = '<div class="form-item">';
 $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('properties-table'))));
-$output .= '<div class="clearfix">' . drupal_render($element['new_category']) . drupal_render($element['add_more']) . '</div>';
+$output .= '<div class="clearfix inline">' . drupal_render($element['new_category']) . drupal_render($element['add_category']) . '</div>';
+$output .= '<div class="clearfix inline">' . drupal_render($element['attribute_category']) . drupal_render($element['new_attribute']) . drupal_render($element['add_attribute']) . '</div>';
 $output .= '</div>';
 
 echo $output;
