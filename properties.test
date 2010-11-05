@@ -241,30 +241,38 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
 
     // create new attribute
     $attribute = $this->createAttribute();
-
-    $newAttribute = array(
-        "attributes[5][attribute]"  => $attribute->name,
+    $inputfieldname = "attributes[" . $attributes[0]->name . "][attribute]";
+    debug($inputfieldname);
+    $editAttribute = array(
+        $inputfieldname  => $attribute->name,
      );
 
     // replace existing attribute with the new attribute
     $this->drupalGet('admin/config/content/properties/categories');
     $this->AssertText($category->name);
     $this->clickLink(t('edit'));
-    $this->drupalPost(NULL, $newAttribute, t('Save'));
+    $this->drupalPost(NULL, $editAttribute, t('Save'));
 
 
     // now check if the attribute was added to that category
     $cat = properties_sql_properties_category_load($category->name);
-    $inCategory = false;
-    
+    $newAttributeInCategory = false;
+    $oldAttributeInCategory = false;
     //debug($attribute->name);
     // as the order isn't given, I walk trough the list of attributes
     foreach($cat->attributes as $attr) {
       if ($attr->name === $attribute->name) {
-        $inCategory = true;
+        $newAttributeInCategory = true;
+      }
+      if ($attr->name === $attributes[0]->name) {
+        $oldAttributeInCategory = true;
       }
     }
-    $this->AssertTrue($inCategory);
+    $this->AssertText(t('Category updated.'));
+    // the new attribute should be in that category
+    $this->AssertTrue($newAttributeInCategory);
+    // the old shouldn't
+    $this->AssertFalse($oldAttributeInCategory);
 
     // delete that property
     // doesn't work yet since the position isn't fixed.
