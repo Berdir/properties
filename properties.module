@@ -272,9 +272,6 @@ function properties_field_validate($entity_type, $entity, $field, $instance, $la
  */
 function properties_field_is_empty($item, $field) {
   return !is_array($item);
-  //dpm($item);
-  //dpm(empty($item['attribute']));
-  //return empty($item['attribute']);
 }
 
 /**
@@ -530,11 +527,30 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
     $items_by_category[$item['category']][] = $item;
   }
 
-  $i = 0;
+  $categories = array();
+  if (!empty($items_by_category)) {
+    $categories = properties_category_load_multiple(array_keys($items_by_category));
+  }
+
+  $element[0]['#prefix'] = '<div class="profile">';
+  $element[0]['#suffix'] = '</div>';
   foreach ($items_by_category as $category => $items_in_category) {
-    $element[0][$i++] = array('#markup' => '<h3>' . $category . '</h3>');
+    $element[0][] = array(
+      '#type' => 'user_profile_category',
+      '#title' => check_plain($categories[$category]->label),
+    );
     foreach ($items_in_category as $item) {
-      $element[0][$i++] = array('#markup' => '<p>' . $item['attribute'] . ': ' . $item['value'] . '</p>');
+      if (isset($categories[$category]->attributes[$item['attribute']])) {
+        $label = $categories[$category]->attributes[$item['attribute']]->label;
+      }
+      else {
+        $label = properties_attribute_load($item['attribute'])->label;
+      }
+      $element[0][] = array(
+        '#type' => 'user_profile_item',
+        '#title' => $label,
+        '#markup' => $item['value'],
+      );
     }
   }
   return $element;
