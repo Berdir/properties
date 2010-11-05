@@ -161,7 +161,7 @@ function properties_sql_schema() {
 }
 
 /**
- * update from previous development version, adds weights
+ * Update from previous development version, adds weights.
  */
 function properties_sql_update_7000() {
   if (!db_field_exists('properties_category_attribute', 'weight')) {
