@@ -1,4 +1,5 @@
 <?php
+
 // $Id$
 
 /**
@@ -155,7 +156,7 @@ function properties_autocomplete_js($type, $string = NULL) {
   foreach ($suggestions as $suggestion) {
     $json_suggestions[$suggestion->name] = t('@name (@label)', array('@name' => $suggestion->name, '@label' => $suggestion->label));
   }
-  drupal_json_output((object)$json_suggestions);
+  drupal_json_output((object) $json_suggestions);
 }
 
 /**
@@ -172,10 +173,6 @@ function properties_theme() {
       'template' => 'properties-properties-form',
     ),
   );
-}
-
-function properties_preprocess_properties_properties_form(&$variables) {
-  //dpm($variables);
 }
 
 /**
@@ -273,7 +270,7 @@ function properties_field_formatter_info() {
  * Implements hook_field_widget_info().
  */
 function properties_field_widget_info() {
-    return array(
+  return array(
     'properties_table' => array(
       'label' => t('Properties table'),
       'field types' => array('properties'),
@@ -304,90 +301,117 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
 
   drupal_add_css(drupal_get_path('module', 'properties') . '/properties.css');
 
+  if (empty($form_state[$field['field_name']])) {
+    $form_state[$field['field_name']]['categories'] = array();
+  }
+  $categories = &$form_state[$field['field_name']]['categories'];
+
   // Retrieve any values set in $form_state, as will be the case during AJAX
   // rebuilds of this form.
-  if (isset($form_state['values'][$field['field_name']][$langcode])) {
-    $items = array();
-    foreach ($form_state['values'][$field['field_name']][$langcode] as $key => $item) {
-      if (is_int($key) && is_array($item)) {
-        $items[$key] = $item;
-      }
+  if (isset($form_state['values'][$field['field_name']][$langcode]['listing'])) {
+    foreach ($form_state['values'][$field['field_name']][$langcode]['listing'] as $category) {
+      $categories[$category['name']]['_weight'] = $category['_weight'];
+      $categories[$category['name']]['properties'] = $category['properties'];
     }
-    unset($form_state['values'][$field['field_name']][$langcode]);
+    unset($form_state['values'][$field['field_name']][$langcode]['listing']);
   }
 
   // Check if we need to load a new category.
   if (!empty($form_state[$field['field_name']]['new_category'])) {
-    foreach ($form_state[$field['field_name']]['new_category']->attributes as $attribute) {
-      $items[] = array(
-        'attribute' => $attribute->name,
+    $new_category = $form_state[$field['field_name']]['new_category'];
+    $categories[$new_category->name] = array(
+      '_weight' => count($categories),
+      'category' => $new_category,
+      'properties' => array(),
+    );
+    foreach ($new_category->attributes as $property) {
+      $categories[$new_category->name]['properties'][] = array(
+        'attribute' => $property->name,
         'category' => $form_state[$field['field_name']]['new_category']->name,
         'value' => '',
+        '_weight' => count($categories[$new_category->name]['properties']),
       );
     }
     unset($form_state[$field['field_name']]['new_category']);
   }
 
-  $categories = array();
-  foreach ($items as $item) {
-    if (is_array($item) && !empty($item['category']) && !isset($categories[$item['category']])) {
-      $categories[$item['category']] = properties_category_load($item['category'])->label;
+  uasort($categories, '_field_sort_items_helper');
+  $category_list = array();
+  foreach ($categories as $category_name => $item) {
+    $category_list[$item['category']->name] = $item['category']->label;
+  }
+
+  $elements['listing'] = array();
+  foreach ($categories as $category_name => $category) {
+    $elements['listing'][$category_name]['#label'] = $category['category']->label;
+    // Only used to trick tabledrag.js.
+    $elements['listing'][$category_name]['category'] = array(
+      '#type' => 'hidden',
+      '#value' => '',
+    );
+
+    $elements['listing'][$category_name]['name'] = array(
+      '#type' => 'hidden',
+      '#value' => $category['category']->name,
+    );
+
+    $elements['listing'][$category_name]['_weight'] = array(
+      '#type' => 'weight',
+      '#title' => t('Weight for category @category', array('@category' => $category['category']->label)),
+      '#title_display' => 'invisible',
+      '#default_value' => $category['_weight'],
+      '#weight' => 100,
+    );
+
+    usort($category['properties'], '_field_sort_items_helper');
+    foreach ($category['properties'] as $delta => $property) {
+      $element = array();
+      $element['category'] = array(
+        '#type' => 'select',
+        '#default_value' => $property['category'],
+        '#options' => $category_list,
+      );
+      $element['attribute'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $property['attribute'],
+        '#autocomplete_path' => 'properties_autocomplete/attribute',
+        '#maxlength' => 255,
+        '#size' => 32,
+        '#ajax' => array(
+          'callback' => 'properties_admin_update_label_js',
+          'wrapper' => 'attributes-wrapper',
+          'effect' => 'fade',
+        ),
+      );
+      $element['label'] = array(
+        '#markup' => !empty($property['attribute']) ? $category['category']->attributes[$property['attribute']]->label : '',
+      );
+
+      $element['value'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $property['value'],
+        '#maxlength' => 255,
+      );
+
+      $element['_weight'] = array(
+        '#type' => 'weight',
+        '#title' => t('Weight for row @number', array('@number' => $delta)),
+        '#title_display' => 'invisible',
+        '#default_value' => $property['_weight'],
+        '#weight' => 100,
+      );
+      $elements['listing'][$category_name]['properties'][$delta] = $element;
     }
   }
 
-  $elements['categories'] = array(
-    '#type' => 'value',
-    '#value' => $categories,
-  );
-
-  $max = count($items);
-  foreach ($items as $delta => $item) {
-    $element = array();
-    $element['category'] = array(
-      '#type' => 'select',
-      '#default_value' => $item['category'],
-      '#options' => $categories,
-    );
-    $element['attribute'] = array(
-      '#type' => 'textfield',
-      '#default_value' => $item['attribute'],
-      '#autocomplete_path' => 'properties_autocomplete/attribute',
-      '#ajax' => array(
-        'callback' => 'properties_admin_update_label_js',
-        'wrapper' => 'attributes-wrapper',
-        'effect' => 'fade',
-      ),
-    );
-    $element['label'] = array(
-      '#markup' => !empty($item['attribute']) ? properties_attribute_load($item['attribute'])->label : '',
-    );
-
-    $element['value'] = array(
-      '#type' => 'textfield',
-      '#default_value' => $item['value'],
-      '#maxlength' => 255,
-    );
-
-    // We name the element '_weight' to avoid clashing with elements
-    // defined by widget.
-    $element['_weight'] = array(
-      '#type' => 'weight',
-      '#title' => t('Weight for row @number', array('@number' => $delta)),
-      '#title_display' => 'invisible',
-      // Note: this 'delta' is the FAPI 'weight' element's property.
-      '#delta' => $max,
-      '#default_value' => isset($item->weight) ? $item->weight : $delta,
-      '#weight' => 100,
-    );
-    $elements[$delta] = $element;
-  }
+  $id = 'properties-' . drupal_html_id($field['field_name']) . '-wrapper';
 
   $elements += array(
     '#type' => 'fieldset',
     '#theme' => 'properties_properties_form',
     '#title' => t('Properties'),
-    '#description' => t('Add properties to this content.'),
-    '#prefix' => '<div id="attributes-wrapper">',
+    '#description' => t('Add properties to this content. Start by adding categories to it.'),
+    '#prefix' => '<div id="' . $id . '">',
     '#suffix' => '</div>',
     '#max_delta' => $delta,
     '#tree' => TRUE,
@@ -396,6 +420,8 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#type' => 'textfield',
     '#default_value' => '',
     '#autocomplete_path' => 'properties_autocomplete/category',
+    '#maxlength' => 255,
+    '#size' => 32,
   );
   $elements['add_more'] = array(
     '#type' => 'submit',
@@ -405,7 +431,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#submit' => array('properties_widget_add_category_submit'),
     '#ajax' => array(
       'callback' => 'properties_widget_add_category_js',
-      'wrapper' => 'attributes-wrapper',
+      'wrapper' => $id,
       'effect' => 'fade',
     ),
   );
@@ -413,27 +439,26 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
 }
 
 function properties_widget_add_category_submit($form, &$form_state) {
-   $field_name = $form_state['triggering_element']['#parents'][0];
-   $langcode = $form[$field_name]['#language'];
-   $values = reset($form_state['values'][$field_name]);
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  $langcode = $form[$field_name]['#language'];
+  $values = reset($form_state['values'][$field_name]);
 
-   dpm($values);
-   if (!isset($values['categories'][$values['new_category']])) {
-     $category = properties_category_load($values['new_category']);
-     if (!empty($category)) {
-       $form_state[$field_name]['new_category'] = $category;
-       form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
-     }
-     else {
-       form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
-     }
-   }
-   $form_state['rebuild'] = TRUE;
+  if (!isset($form_state[$field_name]['categories'][$values['new_category']])) {
+    $category = properties_category_load($values['new_category']);
+    if (!empty($category)) {
+      $form_state[$field_name]['new_category'] = $category;
+      form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
+    }
+    else {
+      form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
+    }
+  }
+  $form_state['rebuild'] = TRUE;
 }
 
 function properties_widget_add_category_js($form, $form_state) {
-   $field_name = $form_state['triggering_element']['#parents'][0];
-   return $form[$field_name];
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  return $form[$field_name];
 }
 
 /**
@@ -516,11 +541,10 @@ function properties_attribute_load($name) {
 function properties_attribute_load_multiple($names = array()) {
   $function_name = _properties_get_call('attribute', 'load_multiple');
   return $function_name($names);
-
 }
 
 /**
- *Load a paged amount of attributes.
+ * Load a paged amount of attributes.
  * @param $per_page
  *   Number of attributes per page.
  */
@@ -581,11 +605,10 @@ function properties_category_load($name) {
 function properties_category_load_multiple($names = array()) {
   $function_name = _properties_get_call('category', 'load_multiple');
   return $function_name($names);
-
 }
 
 /**
- *Load a paged amount of categories.
+ * Load a paged amount of categories.
  * @param $per_page
  *   Number of categories per page.
  */

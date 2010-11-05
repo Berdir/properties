@@ -1,3 +1,7 @@
-form-item-field-properties-und-new-category, field-add-more-submit {
+div#properties-field-properties-wrapper div.form-item-field-properties-und-new-category, input.field-add-more-submit {
     float: left;
+}
+
+div#properties-field-properties-wrapper div.form-item-field-properties-und-new-category {
+    padding: 10px;
 }
