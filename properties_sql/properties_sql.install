@@ -92,7 +92,7 @@ function properties_sql_schema() {
   );
 
 
-    // 'properties_template' table
+  // 'properties_template' table
   $schema['properties_template'] = array(
     'description'       => '{properties_template} holds category names and labels',
     'fields'        => array(
@@ -132,7 +132,6 @@ function properties_sql_schema() {
         'not null' => TRUE,
         'default' => ''
       ),
-
     ),
     'foreign keys' => array(
       'templates_category' => array(

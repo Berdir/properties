@@ -26,9 +26,34 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
     );
     $this->drupalPost('admin/config/content/properties/attributes/add', $attribute, t('Add'));
     $this->assertText(t('Attribute created.'));
-    $attribute = properties_attribute_load($attribute['name']);
-    $this->assertNotNull($attribute, t('Attribute loaded.'));
-    return $attribute;
+    $attribute_object = properties_attribute_load($attribute['name']);
+    $this->assertEqual($attribute_object->label, $attribute['label']);
+    return $attribute_object;
+  }
+
+
+  protected function createCategory($name = NULL, $label = NULL, $attributes = array()) {
+    $category = array(
+      'name' => empty($name) ? strtolower($this->randomName(8)) : $name,
+      'label' => empty($label) ? $this->randomName(20) : $label,
+    );
+
+    $this->drupalPost('admin/config/content/properties/categories/add', $category, t('Add another attribute'));
+
+    for ($i = 0; $i < count($attributes); $i++) {
+
+      $newAttribute = array(
+        "attributes[$i][attribute]"  => $attributes[$i]->name,
+      );
+      $this->drupalPost(NULL, $newAttribute, t('Add another attribute'));
+
+    }
+    $this->drupalPost(NULL,NULL,t('Add'));
+
+    $category_object = properties_category_load($category['name']);
+    $this->assertEqual($category_object->label, $category['label']);
+
+    return $category_object;
   }
 }
 
@@ -155,5 +180,74 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     $this->drupalGet('admin/config/content/properties/attributes');
     $this->assertText($new_label);
     $this->assertText($name);
+
+
+
   }
+  public function testEditCategory() {
+
+    $admin = $this->drupalCreateUser(array('administer properties categories', 'administer properties attributes'));
+    $this->drupalLogin($admin);
+
+    /// Edit Attributes in Categories
+
+
+    // Create 8 properties.
+    $attributes = array();
+    for ($i = 0; $i < 8; $i++) {
+      $attributes[$i] = $this->createAttribute();
+    }
+    // Create category with these existing attributes
+    $category = $this->createCategory(strtolower($this->randomName(8)), $this->randomName(20),$attributes);
+
+
+
+    // create new attribute
+    $attribute = $this->createAttribute();
+
+    $newAttribute = array(
+        "attributes[5][attribute]"  => $attribute->name,
+     );
+
+    // replace existing attribute with the new attribute
+    $this->drupalGet('admin/config/content/properties/categories');
+    $this->AssertText($category->name);
+    $this->clickLink(t('edit'));
+    $this->drupalPost(NULL, $newAttribute, t('Save'));
+
+
+    // now check if the attribute was added to that category
+    $cat = properties_sql_properties_category_load($category->name);
+    $inCategory = false;
+    
+    //debug($attribute->name);
+    // as the order isn't given, I walk trough the list of attributes
+    foreach($cat->attributes as $attr) {
+      if ($attr->name === $attribute->name) {
+        $inCategory = true;
+      }
+    }
+    $this->AssertTrue($inCategory);
+
+    // delete that property
+    // doesn't work yet since the position isn't fixed.
+    /*
+    debug('name of attribute' . $attribute->name);
+    $this->clickLink(t('edit'));
+    $deleteAttribute = array(
+      "attributes[5][attribute]"  => '',
+    );
+    $this->drupalPost(NULL, $deleteAttribute, t('Save'));
+
+    $cat = properties_sql_properties_category_load($category->name);
+    $inCategory = false;
+    foreach($cat->attributes as $attr) {
+      if ($attr->name === $attribute->name) {
+        $inCategory = true;
+      }
+    }
+    $this->AssertFalse($inCategory);*/
+
+  }
+
 }

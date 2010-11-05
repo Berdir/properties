@@ -132,12 +132,10 @@ function properties_sql_properties_category_load($name) {
 function properties_sql_properties_category_load_multiple($names = array()) {
   $result = db_query("SELECT * FROM {properties_category} WHERE name in (:categories)", array(':categories' => $names));
   $categories = $result->fetchAllAssoc('name');
-
   $result = db_query("SELECT * FROM {properties_category_attribute} pac INNER JOIN {properties_attribute} pa ON pac.attribute_name = pa.name WHERE category_name in (:categories)", array(':categories' => $names));
   foreach ($result as $attribute) {
     $categories[$attribute->category_name]->attributes[] = $attribute;
   }
-
   return $categories;
 }
 
