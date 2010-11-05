@@ -158,7 +158,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
   }
   if ($add_empty) {
     // Use a random id for these to trick out browsers.
-    $form_state['category']->attributes[rand(0, 500)] = (object)array(
+    $form_state['category']->attributes[] = (object)array(
       'name' => '',
       'label' => '',
       'weight' => count($form_state['category']->attributes),
@@ -299,7 +299,7 @@ function properties_admin_categories_form_validate($form, &$form_state) {
       }
       else {
         // Update empty attribute.
-        $form_state['category']->attributes[$attribute['attribute']]->name = $attribute['name'];
+        $form_state['category']->attributes[$attribute['attribute']]->name = $attribute['attribute'];
         $form_state['category']->attributes[$attribute['attribute']]->label = isset($attribute['label']) ? $attribute['label'] : '';
         $form_state['category']->attributes[$attribute['attribute']]->weight = $attribute['_weight'];
         $form_state['category']->attributes[$attribute['attribute']]->new = TRUE;
@@ -431,12 +431,11 @@ function properties_admin_update_label_js($form, &$form_state) {
 function properties_admin_add_more_submit($form, &$form_state) {
   $attribute = 
 
-  $form_state['category']->attributes[rand(0, 500)] = (object)array(
+  $form_state['category']->attributes[] = (object)array(
     'label' => '',
     'name' => '',
     'weight' => count($form_state['category']->attributes),
   );
-  dpm($form_state['category']);
   $form_state['rebuild'] = TRUE;
 }
 

@@ -208,7 +208,7 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     $this->assertText(t('Attribute @name does not exist, a label must be provided to create it.', array('@name' => $name)));
 
     $label = array(
-      'attributes[2][label]' => $new_label = $this->randomName(20),
+      'attributes[' . $name  . '][label]' => $new_label = $this->randomName(20),
     );
     $this->drupalPost(NULL, $label, t('Add'));
     $this->assertText(t('Category created.'));
@@ -270,9 +270,9 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     }
     $this->AssertText(t('Category updated.'));
     // the new attribute should be in that category
-    $this->AssertTrue($newAttributeInCategory);
+    $this->AssertTrue(isset($cat->attributes[$attribute->name]));
     // the old shouldn't
-    $this->AssertFalse($oldAttributeInCategory);
+    $this->AssertFalse(isset($cat->attributes[$attributes[0]->name]));
 
     // delete that property
     // doesn't work yet since the position isn't fixed.

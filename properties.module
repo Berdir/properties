@@ -241,6 +241,26 @@ function properties_field_schema($field) {
 }
 
 /**
+ * Implements hook_field_presave().
+ */
+function properties_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  $categories = $items[0];
+  uasort($categories, '_field_sort_items_helper');
+  $items = array();
+  $delta = 0;
+  foreach ($categories as $category) {
+    uasort($category['properties'], '_field_sort_items_helper');
+    foreach ($category['properties'] as $property) {
+      $items[] = array(
+        'attribute' => $property['attribute'],
+        'value' => $property['value'],
+        'category' => $property['category'],
+      );
+    }
+  }
+}
+
+/**
  * Implements hook_field_validate().
  */
 function properties_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
@@ -251,7 +271,10 @@ function properties_field_validate($entity_type, $entity, $field, $instance, $la
  * Implements hook_field_is_empty().
  */
 function properties_field_is_empty($item, $field) {
-  return empty($item['attribute']);
+  return !is_array($item);
+  //dpm($item);
+  //dpm(empty($item['attribute']));
+  //return empty($item['attribute']);
 }
 
 /**
@@ -313,7 +336,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       $categories[$category['name']]['_weight'] = $category['_weight'];
       $categories[$category['name']]['properties'] = $category['properties'];
     }
-    unset($form_state['values'][$field['field_name']][$langcode]['listing']);
+    //unset($form_state['values'][$field['field_name']][$langcode]['listing']);
   }
 
   // Check if we need to load a new category.
