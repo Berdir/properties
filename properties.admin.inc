@@ -145,10 +145,24 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
         'new' => TRUE,
       );
     }
-
-    // Add an empty attribute.
-    $category->attributes[] = properties_empty_attribute();
     $form_state['category'] = $category;
+  }
+
+  // Make sure there are always 3 empty attribute displayed.
+  $add_empty = true;
+  foreach ($form_state['category']->attributes as $attribute) {
+    if (empty($attribute->name)) {
+      $add_empty = false;
+      break;
+    }
+  }
+  if ($add_empty) {
+    // Use a random id for these to trick out browsers.
+    $form_state['category']->attributes[rand(0, 500)] = (object)array(
+      'name' => '',
+      'label' => '',
+      'weight' => count($form_state['category']->attributes),
+    );
   }
 
   drupal_add_css(drupal_get_path('module', 'properties') . '/properties_admin.css');
@@ -173,8 +187,8 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
   );
 
   $attributes = array();
-  $max = count($form_state['category']->attributes);
-  foreach ($form_state['category']->attributes as $delta => $attribute) {
+  $delta = 0;
+  foreach ($form_state['category']->attributes as $name => $attribute) {
     $element = array();
     $element['attribute'] = array(
       '#type' => 'textfield',
@@ -207,12 +221,11 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
       '#type' => 'weight',
       '#title' => t('Weight for row @number', array('@number' => $delta)),
       '#title_display' => 'invisible',
-      // Note: this 'delta' is the FAPI 'weight' element's property.
-      '#delta' => $max,
-      '#default_value' => isset($attribute->weight) ? $attribute->weight : $delta,
+      '#default_value' => !empty($attribute->weight) ? $attribute->weight : $delta,
       '#weight' => 100,
     );
-    $attributes[$delta] = $element;
+    $attributes[!empty($attribute->name) ? $attribute->name : $delta] = $element;
+    $delta++;
   }
 
   $attributes += array(
@@ -268,29 +281,31 @@ function properties_admin_categories_form_validate($form, &$form_state) {
   // Update category object.
   $form_state['category']->label = $form_state['values']['label'];
   $form_state['category']->name = $form_state['values']['name'];
+  $form_state['category']->attributes = array();
 
-  foreach ($form_state['values']['attributes'] as $delta => $attribute) {
-    if (is_int($delta)) {
+  foreach ($form_state['values']['attributes'] as $name => $attribute) {
+    if (is_array($attribute) && isset($attribute['attribute'])) {
       if (empty($attribute['attribute'])) {
         $attribute_object = (object)array(
           'label' => '',
           'name' => '',
+          'weight' => !empty($attribute['_weight']) ? $attribute['_weight'] : count($form_state['category']->attributes),
         );
-        $form_state['category']->attributes[$delta] = $attribute_object;
+        $form_state['category']->attributes[$name] = $attribute_object;
       }
       elseif ($attribute_object = properties_attribute_load($attribute['attribute'])) {
         $attribute_object->weight = $attribute['_weight'];
-        $form_state['category']->attributes[$delta] = $attribute_object;
+        $form_state['category']->attributes[$attribute_object->name] = $attribute_object;
       }
       else {
         // Update empty attribute.
-        $form_state['category']->attributes[$delta]->name = $attribute['attribute'];
-        $form_state['category']->attributes[$delta]->label = isset($attribute['label']) ? $attribute['label'] : '';
-        $form_state['category']->attributes[$delta]->weight = $attribute['_weight'];
-        $form_state['category']->attributes[$delta]->new = TRUE;
+        $form_state['category']->attributes[$attribute['attribute']]->name = $attribute['name'];
+        $form_state['category']->attributes[$attribute['attribute']]->label = isset($attribute['label']) ? $attribute['label'] : '';
+        $form_state['category']->attributes[$attribute['attribute']]->weight = $attribute['_weight'];
+        $form_state['category']->attributes[$attribute['attribute']]->new = TRUE;
 
         // If label is empty, add validation error.
-        if (empty($form_state['category']->attributes[$delta]->label)) {
+        if (empty($form_state['category']->attributes[$attribute['attribute']]->label)) {
           // Not possible to do this as a proper form validation step because
           // the form is not rebuilt in case of validation errors.
           //form_set_error('attributes[' . $delta . '][label]', t('Attribute does not exist, label is required.'));
@@ -368,7 +383,7 @@ function theme_properties_admin_categories_attributes_form($variables) {
       $items[] = &$element[$key];
     }
   }
-  usort($items, '_field_sort_items_value_helper');
+  uasort($items, '_field_sort_items_value_helper');
 
   // Add the items as table rows.
   foreach ($items as $key => $item) {
@@ -414,12 +429,14 @@ function properties_admin_update_label_js($form, &$form_state) {
  * to return just the changed part of the form.
  */
 function properties_admin_add_more_submit($form, &$form_state) {
-  $attribute = (object)array(
+  $attribute = 
+
+  $form_state['category']->attributes[rand(0, 500)] = (object)array(
     'label' => '',
     'name' => '',
+    'weight' => count($form_state['category']->attributes),
   );
-
-  $form_state['category']->attributes[] = $attribute;
+  dpm($form_state['category']);
   $form_state['rebuild'] = TRUE;
 }
 
@@ -433,11 +450,6 @@ function properties_admin_add_more_submit($form, &$form_state) {
  */
 function properties_admin_add_more_js($form, $form_state) {
   $element = $form['attributes'];
-
-  // Add a DIV around the new field to receive the AJAX effect.
-  $delta = $element['#max_delta'];
-  $element[$delta]['#prefix'] = '<div class="ajax-new-content">' . (isset($element[$delta]['#prefix']) ? $element[$delta]['#prefix'] : '');
-  $element[$delta]['#suffix'] = (isset($element[$delta]['#suffix']) ? $element[$delta]['#suffix'] : '') . '</div>';
 
   return $element;
 }
