@@ -91,11 +91,12 @@ function properties_sql_properties_category_save($category) {
     ->execute();
 
   $insert = db_insert('properties_category_attribute')
-    ->fields(array('category_name', 'attribute_name'));
+    ->fields(array('category_name', 'attribute_name','weight'));
   foreach ($category->attributes as $attribute) {
     $insert->values(array(
       'category_name' => $category->name,
       'attribute_name' => $attribute->name,
+      'weight' => $attribute->weight,
     ));
   }
   $insert->execute();
@@ -136,7 +137,10 @@ function properties_sql_properties_category_load($name) {
 function properties_sql_properties_category_load_multiple($names = array()) {
   $result = db_query("SELECT * FROM {properties_category} WHERE name in (:categories)", array(':categories' => $names));
   $categories = $result->fetchAllAssoc('name');
-  $result = db_query("SELECT * FROM {properties_category_attribute} pac INNER JOIN {properties_attribute} pa ON pac.attribute_name = pa.name WHERE category_name in (:categories)", array(':categories' => $names));
+  foreach($categories as $category) {
+    $category->attributes = array();
+  }
+  $result = db_query("SELECT pa.* pac.weight FROM {properties_category_attribute} pac INNER JOIN {properties_attribute} pa ON pac.attribute_name = pa.name WHERE category_name in (:categories)", array(':categories' => $names));
   foreach ($result as $attribute) {
     $categories[$attribute->category_name]->attributes[$attribute->name] = $attribute;
   }

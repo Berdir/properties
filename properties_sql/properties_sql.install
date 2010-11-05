@@ -75,6 +75,11 @@ function properties_sql_schema() {
         'not null' => TRUE,
         'default' => ''
       ),
+      'weight' => array(
+        'description'   => 'weight of the attribute in the category',
+        'type'          => 'int',
+        'not null'      => TRUE,
+      ),
     ),
     'foreign keys' => array(
       'attributes_category' => array(
@@ -129,8 +134,12 @@ function properties_sql_schema() {
         'description'   => 'refers to category',
         'type' => 'varchar',
         'length' => 255,
-        'not null' => TRUE,
         'default' => ''
+      ),
+      'weight' => array(
+        'description'   => 'weight of category in the template',
+        'type'          => 'int',
+        'not null'      => TRUE,
       ),
     ),
     'foreign keys' => array(
@@ -149,4 +158,31 @@ function properties_sql_schema() {
   );
 
   return $schema;
+}
+
+/**
+ * update from previous development version, adds weights
+ */
+function properties_sql_update_7000() {
+  if (!db_field_exists('properties_category_attribute', 'weight')) {
+    $schema = array(
+      'description' => 'weight of the attribute in the category',
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    );
+
+    db_add_field('properties_category_attribute', 'weight', $schema);
+  }
+
+  if (!db_field_exists('properties_template_category', 'weight')) {
+    $schema = array(
+      'description' => 'weight of category in the template',
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    );
+
+    db_add_field('properties_template_category', 'weight', $schema);
+  }
 }
