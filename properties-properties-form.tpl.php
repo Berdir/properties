@@ -5,13 +5,22 @@ $output = '';
 
 $table_id = 'properties-table';
 
-$header = array(
-  t('Attribute name'),
-  t('Attribute label'),
-  t('Value'),
-  t('Category'),
-  t('Order'),
-);
+if (user_access('add proprties attributes')) {
+  $header = array(
+    t('Attribute name'),
+    t('Attribute label'),
+    t('Value'),
+    t('Category'),
+    t('Order'),
+  );
+}
+else {
+  $header = array(
+    t('Attribute'),
+    t('Value'),
+    t('Order'),
+  );
+}
 $rows = array();
 
 drupal_add_tabledrag($table_id, 'match', 'parent', 'property-category-select', 'property-category-select', 'category-name');
@@ -23,17 +32,17 @@ foreach (element_children($element['listing']) as $category_name) {
   $category['name']['#attributes']['class'] = array('category-name');
   $category['category']['#attributes']['class'] = array('property-category-select');
 
-  $cells = array(
-    'data' => array(
-      $category['#label'],
-      '',
-      '',
-      '',
-      drupal_render($category['category']) . drupal_render($category['name']) . drupal_render($category['_weight']),
-    ),
+  $cells = array();
+  $cells[] = '<strong>' . $category['#label'] . '</strong>';
+  $cells[] = '&nbsp;';
+  if (user_access('add properties attributes')) {
+    $cells += array('&nbsp;', '&nbsp;');
+  }
+  $cells[] = drupal_render($category['category']) . drupal_render($category['name']) . drupal_render($category['_weight']);
+  $rows[] = array(
+    'data' => $cells,
     'class' => array('draggable', 'tabledrag-root'),
   );
-  $rows[] = $cells;
 
   foreach (element_children($category['properties']) as $delta) {
     $property = $category['properties'][$delta];
@@ -42,16 +51,26 @@ foreach (element_children($element['listing']) as $category_name) {
     $property['category']['#attributes']['class'] = array('property-category-select');
     $property['_weight']['#attributes']['class'] = array('property-weight');
 
-    $cells = array(
-      array('data' => theme('indentation', array('size' => 1)) . drupal_render($property['attribute']), 'class' => array('properties-attribute-row-small')),
-      drupal_render($property['label']),
-      drupal_render($property['value']),
-      drupal_render($property['category']),
-      drupal_render($property['_weight']),
-    );
+    $cells = array();
+    if (user_access('add properties attributes')) {
+      $cells[] = array('data' => theme('indentation', array('size' => 1)) . drupal_render($property['attribute']), 'class' => array('properties-attribute-row-small'));
+      $cells[] = drupal_render($property['label']);
+    }
+    else {
+      $cells[] = theme('indentation', array('size' => 1)) . drupal_render($property['label']);
+    }
+
+    $cells[] = drupal_render($property['value']);
+    if (user_access('add properties attributes')) {
+      $cells[] = drupal_render($property['category']);
+      $cells[] = drupal_render($property['_weight']);
+    }
+    else {
+      $cells[] = '&nbsp;';
+    }
     $rows[] = array(
       'data' => $cells,
-      'class' => array('draggable', 'tabledrag-leaf'),
+      'class' => user_access('add properties attributes') ? array('draggable', 'tabledrag-leaf') : array('properties-tabledrag-children'),
     );
   }
 }

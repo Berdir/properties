@@ -8,20 +8,20 @@
 function properties_permission() {
   return array(
     'administer properties attributes' => array(
-      'label' => t('Administer attributes'),
+      'title' => t('Administer attributes'),
       'description' => t('Allows to create new, edit existing and delete attributes.'),
     ),
     'administer properties categories' => array(
-      'label' => t('Administer categories'),
+      'title' => t('Administer categories'),
       'description' => t('Allows to create new, edit existing and delete categories.'),
     ),
-    'add properties categories to content' => array(
-      'label' => t('Add categories to content'),
+    'add properties categories' => array(
+      'title' => t('Add categories to content'),
       'description' => t('Allows to add existing categories to content.'),
     ),
-    'add properties attributes to content' => array(
-      'label' => t('Add attributes to content'),
-      'description' => t('Allows to add existing attributes to content.'),
+    'add properties attributes' => array(
+      'title' => t('Add attributes to content'),
+      'description' => t('Allows to add existing attributes to content or change existing ones.'),
     )
   );
 }
@@ -399,7 +399,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     foreach ($category['properties'] as $delta => $property) {
       $element = array();
       $element['category'] = array(
-        '#type' => 'select',
+        '#type' => user_access('add properties attributes') ? 'select' : 'hidden',
         '#default_value' => $property['category'],
         '#options' => $category_list,
       );
@@ -409,6 +409,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#autocomplete_path' => 'properties_autocomplete/attribute',
         '#maxlength' => 255,
         '#size' => 32,
+        '#access' => user_access('add proprties attributes'),
         '#ajax' => array(
           'callback' => 'properties_admin_update_label_js',
           'wrapper' => 'attributes-wrapper',
@@ -435,6 +436,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#title_display' => 'invisible',
         '#default_value' => $property['_weight'],
         '#weight' => 100,
+        '#access' => user_access('add proprties attributes'),
       );
       $elements['listing'][$category_name]['properties'][$property['attribute']] = $element;
       $tabindex++;
@@ -453,50 +455,55 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#max_delta' => $delta,
     '#tree' => TRUE,
   );
-  $elements['new_category'] = array(
-    '#type' => 'textfield',
-    '#default_value' => '',
-    '#autocomplete_path' => 'properties_autocomplete/category',
-    '#maxlength' => 255,
-    '#size' => 32,
-  );
-  $elements['add_category'] = array(
-    '#type' => 'submit',
-    '#value' => t('Add category'),
-    '#attributes' => array('class' => array('field-add-more-submit')),
-    '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
-    '#submit' => array('properties_widget_add_category_submit'),
-    '#ajax' => array(
-      'callback' => 'properties_widget_update_js',
-      'wrapper' => $id,
-      'effect' => 'fade',
-    ),
-  );
 
-  $element['attribute_category'] = array(
-    '#type' => 'select',
-    '#options' => $category_list,
-  );
+  if (user_access('add properties categories')) {
+    $elements['new_category'] = array(
+      '#type' => 'textfield',
+      '#default_value' => '',
+      '#autocomplete_path' => 'properties_autocomplete/category',
+      '#maxlength' => 255,
+      '#size' => 32,
+    );
+    $elements['add_category'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add category'),
+      '#attributes' => array('class' => array('field-add-more-submit')),
+      '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+      '#submit' => array('properties_widget_add_category_submit'),
+      '#ajax' => array(
+        'callback' => 'properties_widget_update_js',
+        'wrapper' => $id,
+        'effect' => 'fade',
+      ),
+    );
+  }
 
-  $elements['new_attribute'] = array(
-    '#type' => 'textfield',
-    '#default_value' => '',
-    '#autocomplete_path' => 'properties_autocomplete/attribute',
-    '#maxlength' => 255,
-    '#size' => 32,
-  );
-  $elements['add_attribute'] = array(
-    '#type' => 'submit',
-    '#value' => t('Add attribute'),
-    '#attributes' => array('class' => array('field-add-more-submit')),
-    '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
-    '#submit' => array('properties_widget_add_attribute_submit'),
-    '#ajax' => array(
-      'callback' => 'properties_widget_update_js',
-      'wrapper' => $id,
-      'effect' => 'fade',
-    ),
-  );
+  if (user_access('add proprties attributes')) {
+    $element['attribute_category'] = array(
+      '#type' => 'select',
+      '#options' => $category_list,
+    );
+
+    $elements['new_attribute'] = array(
+      '#type' => 'textfield',
+      '#default_value' => '',
+      '#autocomplete_path' => 'properties_autocomplete/attribute',
+      '#maxlength' => 255,
+      '#size' => 32,
+    );
+    $elements['add_attribute'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add attribute'),
+      '#attributes' => array('class' => array('field-add-more-submit')),
+      '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+      '#submit' => array('properties_widget_add_attribute_submit'),
+      '#ajax' => array(
+        'callback' => 'properties_widget_update_js',
+        'wrapper' => $id,
+        'effect' => 'fade',
+      ),
+    );
+  }
   return $elements;
 }
 
