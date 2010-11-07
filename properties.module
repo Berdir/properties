@@ -422,7 +422,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#type' => 'textfield',
         '#default_value' =>  $property['value'],
         '#maxlength' => 255,
-        '#tabindex' => $tabindex,
+        '#attributes' => array('tabindex' => $tabindex),
       );
 
       $element['_weight'] = array(
