@@ -320,6 +320,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
   $elements = array();
 
   drupal_add_css(drupal_get_path('module', 'properties') . '/properties.css');
+  drupal_add_js(drupal_get_path('module', 'properties') . '/properties.js');
 
   if (empty($form_state[$field['field_name']])) {
     $form_state[$field['field_name']]['categories'] = array();
@@ -422,7 +423,10 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#type' => 'textfield',
         '#default_value' =>  $property['value'],
         '#maxlength' => 255,
-        '#attributes' => array('tabindex' => $tabindex),
+        '#attributes' => array(
+          'tabindex' => $tabindex,
+          'class' => array('properties-value'),
+        ),
       );
 
       $element['_weight'] = array(
