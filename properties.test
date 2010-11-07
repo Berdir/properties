@@ -245,7 +245,7 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     debug($inputfieldname);
     $editAttribute = array(
         $inputfieldname  => $attribute->name,
-     );
+    );
 
     // replace existing attribute with the new attribute
     $this->drupalGet('admin/config/content/properties/categories');
@@ -274,24 +274,22 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     // the old shouldn't
     $this->AssertFalse(isset($cat->attributes[$attributes[0]->name]));
 
-    // delete that property
-    // doesn't work yet since the position isn't fixed.
-    /*
-    debug('name of attribute' . $attribute->name);
+    
+    //delete created property again
+    //debug('name of attribute' . $attribute->name);
+    $this->drupalGet('admin/config/content/properties/categories');
+    $this->AssertText($category->name);
     $this->clickLink(t('edit'));
+    $inputfieldname = "attributes[" . $attribute->name . "][attribute]";
+    //debug($inputfieldname);
     $deleteAttribute = array(
-      "attributes[5][attribute]"  => '',
+        $inputfieldname  => '',
     );
     $this->drupalPost(NULL, $deleteAttribute, t('Save'));
 
     $cat = properties_sql_properties_category_load($category->name);
-    $inCategory = false;
-    foreach($cat->attributes as $attr) {
-      if ($attr->name === $attribute->name) {
-        $inCategory = true;
-      }
-    }
-    $this->AssertFalse($inCategory);*/
+
+    $this->AssertFalse(isset($cat->attributes[$attribute->name]));
 
   }
 
