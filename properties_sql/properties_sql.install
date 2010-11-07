@@ -7,7 +7,7 @@
  */
 
 /**
- * Database schema for properties_sql
+ * Database schema for properties_sql.
  */
 function properties_sql_schema() {
   $schema = array();

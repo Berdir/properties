@@ -31,7 +31,19 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
     return $attribute_object;
   }
 
-
+  /**
+   * Create a category with attributes through the administration interface, load and return it.
+   *
+   * @param $name
+   *   machine_name of category, a random name is generated when left empty.
+   * @param $label
+   *   Label of the category, a random label is generated when left empty.
+   * @param $attributes
+   *   An array of attributes, that is added to the category.
+   *
+   * @return
+   *   Loaded category object.
+   */
   protected function createCategory($name = NULL, $label = NULL, $attributes = array()) {
     $category = array(
       'name' => empty($name) ? strtolower($this->randomName(8)) : $name,
@@ -81,6 +93,9 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
     parent::setUp('properties');
   }
 
+  /**
+   * Test field creation functionality.
+   */
   function testPropertyFieldCreation() {
     $admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content'));
     $this->drupalLogin($admin);
@@ -221,6 +236,10 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
 
 
   }
+
+  /**
+   * Tests for creating and editing a category.
+   */
   public function testEditCategory() {
 
     $admin = $this->drupalCreateUser(array('administer properties categories', 'administer properties attributes'));
