@@ -36,7 +36,8 @@ foreach (element_children($element['listing']) as $category_name) {
   $cells[] = '<strong>' . $category['#label'] . '</strong>';
   $cells[] = '&nbsp;';
   if (user_access('add properties attributes')) {
-    $cells += array('&nbsp;', '&nbsp;');
+    $cells[] = '&nbsp;';
+    $cells[] = '&nbsp;';
   }
   $cells[] = drupal_render($category['category']) . drupal_render($category['name']) . drupal_render($category['_weight']);
   $rows[] = array(
