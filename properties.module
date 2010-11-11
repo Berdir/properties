@@ -280,7 +280,7 @@ function properties_field_is_empty($item, $field) {
 function properties_field_formatter_info() {
   return array(
     'properties_formatter_list' => array(
-      'label' => t('Default'),
+      'label' => t('Definition list'),
       'field types' => array('properties'),
     ),
     'properties_formatter_table' => array(
@@ -605,7 +605,13 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
           dpm($rows);*/
 
           foreach ($items_by_category as $category => $items_in_category) {
-            $rows[] = array(array('data' => check_plain($categories[$category]->label),'colspan' => 2));
+            $rows[] = array(
+              array(
+                'data' => check_plain($categories[$category]->label),
+                'colspan' => 2,
+                'header' => TRUE,
+              ),
+            );
             foreach ($items_in_category as $item) {
               if (isset($categories[$category]->attributes[$item['attribute']])) {
                 $label = $categories[$category]->attributes[$item['attribute']]->label;
