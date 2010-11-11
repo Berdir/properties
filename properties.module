@@ -204,7 +204,7 @@ function properties_field_info() {
       'settings' => array(),
       'instance_settings' => array(),
       'default_widget' => 'properties_table',
-      'default_formatter' => 'properties_formatter',
+      'default_formatter' => 'properties_formatter_list',
     ),
   );
 }
@@ -279,12 +279,18 @@ function properties_field_is_empty($item, $field) {
  */
 function properties_field_formatter_info() {
   return array(
-    'properties_formatter' => array(
+    'properties_formatter_list' => array(
       'label' => t('Default'),
+      'field types' => array('properties'),
+    ),
+    'properties_formatter_table' => array(
+      'label' => t('Table'),
       'field types' => array('properties'),
     ),
   );
 }
+
+
 
 /**
  * Implements hook_field_widget_info().
@@ -533,13 +539,15 @@ function properties_widget_update_js($form, $form_state) {
  * Implements hook_field_formatter_view().
  */
 function properties_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-  $items_by_category = array();
-  foreach ($items as $item) {
-    if (!isset($items_by_category[$item['category']])) {
-      $items_by_category[$item['category']] = array();
-    }
-    $items_by_category[$item['category']][] = $item;
+
+
+ $element = array();
+ $items_by_category = array();
+ foreach ($items as $item) {
+   if (!isset($items_by_category[$item['category']])) {
+     $items_by_category[$item['category']] = array();
+   }
+   $items_by_category[$item['category']][] = $item;
   }
 
   $categories = array();
@@ -547,26 +555,75 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
     $categories = properties_category_load_multiple(array_keys($items_by_category));
   }
 
-  $element[0]['#prefix'] = '<div class="profile">';
-  $element[0]['#suffix'] = '</div>';
-  foreach ($items_by_category as $category => $items_in_category) {
-    $element[0][] = array(
-      '#type' => 'user_profile_category',
-      '#title' => check_plain($categories[$category]->label),
-    );
-    foreach ($items_in_category as $item) {
-      if (isset($categories[$category]->attributes[$item['attribute']])) {
-        $label = $categories[$category]->attributes[$item['attribute']]->label;
+  switch ($display['type']) {
+
+
+    case 'properties_formatter_list':
+
+
+
+      $element[0]['#prefix'] = '<div class="profile">';
+      $element[0]['#suffix'] = '</div>';
+      foreach ($items_by_category as $category => $items_in_category) {
+        $element[0][] = array(
+          '#type' => 'user_profile_category',
+          '#title' => check_plain($categories[$category]->label),
+        );
+        foreach ($items_in_category as $item) {
+          if (isset($categories[$category]->attributes[$item['attribute']])) {
+            $label = $categories[$category]->attributes[$item['attribute']]->label;
+          }
+          else {
+            $label = properties_attribute_load($item['attribute'])->label;
+          }
+          $element[0][] = array(
+            '#type' => 'user_profile_item',
+            '#title' => $label,
+            '#markup' => $item['value'],
+          );
+        }
       }
-      else {
-        $label = properties_attribute_load($item['attribute'])->label;
-      }
-      $element[0][] = array(
-        '#type' => 'user_profile_item',
-        '#title' => $label,
-        '#markup' => $item['value'],
-      );
-    }
+      break;
+
+      case 'properties_formatter_table':
+
+        $rows = array();
+          /*$rows = array(
+            // Simple row
+             array(
+              array('data' => 'Cell 2', 'colspan' => 2),
+            ),
+            array(
+              'Cell 1', 'Cell 2',
+            ),
+            array(
+              'Cell 1', 'Cell 2',
+            ),
+            // Row with attributes on the row and some of its cells.
+
+          );
+          dpm($rows);*/
+
+          foreach ($items_by_category as $category => $items_in_category) {
+            $rows[] = array(array('data' => check_plain($categories[$category]->label),'colspan' => 2));
+            foreach ($items_in_category as $item) {
+              if (isset($categories[$category]->attributes[$item['attribute']])) {
+                $label = $categories[$category]->attributes[$item['attribute']]->label;
+              }
+              else {
+                $label = properties_attribute_load($item['attribute'])->label;
+              }
+              //dpm($label);
+              $rows[] = array($label, $item['value']);
+              //dpm($item['value']);
+            }
+          }
+          //dpm($rows);
+
+          $element[0]['#markup'] = theme('table',array('header' => null, 'rows' => $rows));
+          //dpm($element);
+
+      break;
   }
   return $element;
 }
