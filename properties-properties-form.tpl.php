@@ -5,7 +5,7 @@ $output = '';
 
 $table_id = 'properties-table';
 
-if (user_access('add proprties attributes')) {
+if (user_access('add properties attributes')) {
   $header = array(
     t('Attribute name'),
     t('Attribute label'),

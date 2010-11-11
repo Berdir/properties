@@ -334,7 +334,6 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       $categories[$category['name']]['_weight'] = $category['_weight'];
       $categories[$category['name']]['properties'] = $category['properties'];
     }
-    //unset($form_state['values'][$field['field_name']][$langcode]['listing']);
   }
 
   // Check if we need to load a new category.
@@ -409,7 +408,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#autocomplete_path' => 'properties_autocomplete/attribute',
         '#maxlength' => 255,
         '#size' => 32,
-        '#access' => user_access('add proprties attributes'),
+        '#access' => user_access('add properties attributes'),
         '#ajax' => array(
           'callback' => 'properties_admin_update_label_js',
           'wrapper' => 'attributes-wrapper',
@@ -436,7 +435,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#title_display' => 'invisible',
         '#default_value' => $property['_weight'],
         '#weight' => 100,
-        '#access' => user_access('add proprties attributes'),
+        '#access' => user_access('add properties attributes'),
       );
       $elements['listing'][$category_name]['properties'][$property['attribute']] = $element;
       $tabindex++;
@@ -478,7 +477,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     );
   }
 
-  if (user_access('add proprties attributes')) {
+  if (user_access('add properties attributes')) {
     $element['attribute_category'] = array(
       '#type' => 'select',
       '#options' => $category_list,
@@ -703,4 +702,14 @@ function properties_category_load_multiple($names = array()) {
 function properties_category_load_paging($per_page, array $options = array()) {
   $function_name = _properties_get_call('category', 'load_paging');
   return $function_name($per_page, $options);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function properties_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+  if ($form['#field']['type'] == 'properties') {
+    $form['field']['cardinality']['#default_value'] = FIELD_CARDINALITY_UNLIMITED;
+    $form['field']['#access'] = FALSE;
+  }
 }

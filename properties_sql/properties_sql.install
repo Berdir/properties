@@ -90,10 +90,9 @@ function properties_sql_schema() {
         'table' => 'properties_attribute',
         'columns' => array('name' => 'attribute_name')
         ),
-       ),
-
-    'primary key'     => array('category_name','attribute_name'),
-
+      ),
+    // MARIA Storage engine key length must not be longer than 1024 bytes.
+    'primary key'     => array(array('category_name', 100), array('attribute_name', 100)),
   );
 
 
@@ -152,9 +151,8 @@ function properties_sql_schema() {
         'columns' => array('name' => 'category_name')
         ),
        ),
-
-    'primary key'     => array('template_name','category_name'),
-
+    // MARIA Storage engine key length must not be longer than 1024 bytes.
+    'primary key'     => array(array('template_name', 100), array('category_name', 100)),
   );
 
   return $schema;
