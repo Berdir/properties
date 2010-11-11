@@ -65,6 +65,15 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
   protected $field_prefix;
 
   /**
+   * Implements setUp().
+   */
+  function setUp() {
+    parent::setUp('properties', 'properties_sql');
+    $this->admin = NULL;
+    $this->editor = NULL;
+  }
+
+  /**
    * Create an attribute through the administration interface, load and return it.
    *
    * @param $name
@@ -212,13 +221,6 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
   }
 
   /**
-   * Implements setUp().
-   */
-  function setUp() {
-    parent::setUp('properties', 'properties_sql');
-  }
-
-  /**
    * Test field creation functionality.
    */
   function testPropertyFieldCreation() {
@@ -334,10 +336,6 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
       'description' => t('Category and Attribute administration tests'),
       'group' => t('Properties'),
     );
-  }
-
-  public function setUp() {
-    parent::setUp('properties', 'properties_sql');
   }
 
   public function testCreating() {
