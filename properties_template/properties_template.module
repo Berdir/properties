@@ -25,6 +25,16 @@ function properties_template_load_multiple($names = array()) {
 }
 
 /**
+ * Load a paged amount of templates.
+ * @param $per_page
+ *   Number of templates per page.
+ */
+function properties_template_load_paging($per_page, array $options = array()) {
+  $function_name = _properties_get_call('template', 'load_paging');
+  return $function_name($per_page, $options);
+}
+
+/**
  * Save a template object.
  *
  * @param $template
@@ -49,7 +59,7 @@ function properties_template_save($template) {
  * Delete a template.
  *
  * @param $template
- *   Template object
+ *   Template object.
  */
 function properties_template_delete($template) {
   $function_name = _properties_get_call('template', 'delete');

@@ -148,13 +148,115 @@ function properties_sql_properties_category_load_multiple($names = array()) {
 }
 
 /**
- *Load a paged amount of categories.
+ * Load a paged amount of categories.
  * @param $per_page
  *   Number of categories per page.
  */
 function properties_sql_properties_category_load_paging($per_page, array $options = array()) {
   $query = db_select('properties_category','pc')->extend('PagerDefault')
     ->fields('pc')
+    ->limit($per_page);
+
+  if (!empty($options['search'])) {
+    $query->condition(db_or()
+      ->condition('name', $options['search'] . '%', 'LIKE')
+      ->condition('label', $options['search'] . '%', 'LIKE')
+    );
+  }
+  return $query
+    ->execute()
+    ->fetchAllAssoc('name');
+}
+
+
+/**
+ * Save a template object.
+ *
+ * @param $template
+ *   Template object.
+ */
+function properties_sql_properties_template_save($template) {
+  db_merge('properties_template')
+    ->key(array('name' => $template->name))
+    ->fields(array(
+        'label' => $template->label,
+    ))
+    ->execute();
+
+  // First, remove all existing category connections.
+  db_delete('properties_template_category')
+    ->condition('template_name', $template->name)
+    ->execute();
+
+  $insert = db_insert('properties_template_category')
+    ->fields(array('template_name', 'category_name','weight'));
+  foreach ($template->categories as $category) {
+    $insert->values(array(
+      'template_name' => $template->name,
+      'category_name' => $category->name,
+      'weight' => $category->weight,
+    ));
+  }
+  $insert->execute();
+}
+
+
+/**
+ * Delete a Template.
+ *
+ * @param $template
+ *   Template object.
+ */
+function properties_sql_properties_template_delete($template) {
+  db_delete('properties_template')
+  ->condition('name', $template->name)
+  ->execute();
+
+  db_delete('properties_template_category')
+    ->condition('template_name', $template->name)
+    ->execute();
+}
+
+
+
+/**
+ * Load a template based on the name.
+ *
+ * @param $name
+ *   Machine readable name of the template.
+ */
+function properties_sql_properties_template_load($name) {
+  return reset(properties_sql_properties_template_load_multiple(array($name)));
+}
+
+
+/**
+ * Load multiple templates based on their names.
+ *
+ * @param $names
+ *   Array of machine readable name of the templates.
+ */
+function properties_sql_properties_template_load_multiple($names = array()) {
+  $result = db_query("SELECT * FROM {properties_template} WHERE name in (:templates)", array(':templates' => $names));
+  $templates = $result->fetchAllAssoc('name');
+  foreach($templates as $template) {
+    $template->attributes = array();
+  }
+  $result = db_query("SELECT * FROM {properties_template_category} ptc INNER JOIN {properties_category} pc ON ptc.category_name = pc.name WHERE template_name in (:templates) ORDER BY ptc.weight", array(':templates' => $names));
+  foreach ($result as $category) {
+    $templates[$category->template_name]->categories[$category->name] = $category;
+  }
+  return $templates;
+}
+
+/**
+ * Load a paged amount of templates.
+ * @param $per_page
+ *   Number of templates per page.
+ */
+function properties_sql_properties_template_load_paging($per_page, array $options = array()) {
+  $query = db_select('properties_template','pt')->extend('PagerDefault')
+    ->fields('pt')
     ->limit($per_page);
 
   if (!empty($options['search'])) {
