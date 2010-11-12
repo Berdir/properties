@@ -1,0 +1,7 @@
+; $Id$
+name = Dynamic Properties Comparison
+description = Allows to compare content.
+core = 7.x
+files[] = properties_compare.module
+dependencies[] = properties
+
