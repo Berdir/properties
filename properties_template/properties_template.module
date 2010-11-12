@@ -3,6 +3,62 @@
 // $Id$
 
 /**
+ * Implements hook_menu().
+ */
+function properties_template_menu() {
+
+  $items['admin/config/content/properties/templates'] = array(
+    'title' => 'Templates',
+    'page callback' => 'properties_template_admin_templates_list',
+    'file' => 'properties_template.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('templates'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+
+  $items['admin/config/content/properties/templates/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -20,
+  );
+
+  $items['admin/config/content/properties/templates/add'] = array(
+    'title' => 'Add template',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_template_admin_categories_form'),
+    'file' => 'properties_template.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('categories'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/config/content/properties/templates/edit/%properties_template'] = array(
+    'title' => 'Edit template',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_template_admin_templates_form', 6),
+    'file' => 'properties_template.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('templates'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -10,
+  );
+
+  $items['admin/config/content/properties/templates/delete/%properties_template'] = array(
+    'title' => 'Delete template',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_template_admin_templates_delete', 6),
+    'file' => 'properties_template.admin.inc',
+    'access callback' => 'properties_admin_access',
+    'access arguments' => array('templates'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+
+/**
  * Load a template based on the name.
  *
  * @param $name
