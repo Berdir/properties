@@ -1,0 +1,58 @@
+<?php
+
+// $Id$
+
+/**
+ * Load a template based on the name.
+ *
+ * @param $name
+ *   Template name.
+ */
+function properties_template_load($name) {
+  $function_name = _properties_get_call('template', 'load');
+  return $function_name($name);
+}
+
+/**
+ * Load multiple templates based on their names.
+ *
+ * @param $names
+ *   Array of template names.
+ */
+function properties_template_load_multiple($names = array()) {
+  $function_name = _properties_get_call('template', 'load_multiple');
+  return $function_name($names);
+}
+
+/**
+ * Save a template object.
+ *
+ * @param $template
+ *   Template object.
+ */
+function properties_template_save($template) {
+  foreach ($template->categories as $delta => $category) {
+    // New category, save it first.
+    if (!empty($category->new)) {
+      properties_category_save($category);
+    }
+    // Empty category, remove from array.
+    if (empty($category->name)) {
+      unset($template->categories[$delta]);
+    }
+  }
+  $function_name = _properties_get_call('template', 'save');
+  return $function_name($template);
+}
+
+/**
+ * Delete a template.
+ *
+ * @param $template
+ *   Template object
+ */
+function properties_template_delete($template) {
+  $function_name = _properties_get_call('template', 'delete');
+  return $function_name($template);
+  
+}

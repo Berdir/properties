@@ -667,6 +667,7 @@ function properties_attribute_load_multiple($names = array()) {
 
 /**
  * Load a paged amount of attributes.
+ * 
  * @param $per_page
  *   Number of attributes per page.
  */
