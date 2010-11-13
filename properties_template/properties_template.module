@@ -29,7 +29,7 @@ function properties_template_menu() {
     'page arguments' => array('properties_template_admin_templates_form'),
     'file' => 'properties_template.admin.inc',
     'access callback' => 'properties_admin_access',
-    'access arguments' => array('categories'),
+    'access arguments' => array('templates'),
     'type' => MENU_LOCAL_ACTION,
   );
 

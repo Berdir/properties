@@ -43,7 +43,7 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     $form_state['template'] = $template;
   }
 
-  // Make sure there are always 3 empty attribute displayed.
+  // Make sure there are always 3 empty categories displayed.
   $add_empty = true;
   foreach ($form_state['template']->categories as $category) {
     if (empty($category->name)) {
@@ -78,7 +78,7 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     '#machine_name' => array(
       'exists' => 'properties_template_load',
     ),
-    '#description' => t('A unique machine-readable name for this category. It must only contain lowercase letters, numbers, and underscores. This name will be used when using this attribute.'),
+    '#description' => t('A unique machine-readable name for this category. It must only contain lowercase letters, numbers, and underscores. This name will be used when using this category.'),
   );
 
   $categories = array();
@@ -139,8 +139,8 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     '#type' => 'submit',
     '#name' => 'categories_add_more',
     '#value' => t('Add another category'),
-    '#attributes' => array('class' => array('field-add-more-submit')),
-    '#limit_validation_errors' => array(array('attributes')),
+    '#categories' => array('class' => array('field-add-more-submit')),
+    '#limit_validation_errors' => array(array('categories')),
     '#submit' => array('properties_admin_add_more_submit'),
     '#ajax' => array(
       'callback' => 'properties_admin_add_more_js',
@@ -173,4 +173,54 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     );
   }
   return $form;
+}
+/**
+ * Form builder; Valdate template form.
+ */
+function properties_template_admin_templates_form_validate($form, &$form_state) {
+  // Update template object.
+  $form_state['template']->label = $form_state['values']['label'];
+  $form_state['template']->name = $form_state['values']['name'];
+  $form_state['template']->categories = array();
+
+  foreach ($form_state['values']['categories'] as $name => $category) {
+    if (is_array($category) && isset($category['category'])) {
+      if (empty($category['category'])) {
+        $category_object = (object)array(
+          'label' => '',
+          'name' => '',
+          'weight' => !empty($category['_weight']) ? $category['_weight'] : count($form_state['template']->categories),
+        );
+        $form_state['template']->categories[$name] = $category_object;
+      }
+      elseif ($category_object = properties_category_load($category['category'])) {
+        $category_object->weight = $category['_weight'];
+        $form_state['template']->categories[$category_object->name] = $category_object;
+      }
+      else {
+        // Update empty category.
+        $form_state['template']->categories[$category['category']]->name = $category['category'];
+        $form_state['template']->categories[$category['category']]->label = isset($category['label']) ? $category['label'] : '';
+        $form_state['template']->categories[$category['category']]->weight = $category['_weight'];
+        $form_state['template']->categories[$category['category']]->new = TRUE;
+
+        // If label is empty, add validation error.
+        if (empty($form_state['template']->categories[$category['category']]->label)) {
+          // Not possible to do this as a proper form validation step because
+          // the form is not rebuilt in case of validation errors.
+          drupal_set_message(t('Category %name does not exist, a label must be provided to create it.', array('%name' => $category['category'])), 'error');
+          $form_state['rebuild'] = TRUE;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Form builder; Submit callback to save a template and redirect to list.
+ */
+function properties_template_admin_templates_add($form, &$form_state) {
+  properties_template_save($form_state['template']);
+  $form_state['redirect'] = 'admin/config/content/properties/templates';
+  drupal_set_message(t('Template created.'));
 }
