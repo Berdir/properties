@@ -20,13 +20,13 @@ function properties_template_menu() {
   $items['admin/config/content/properties/templates/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -20,
+    'weight' => -30,
   );
 
   $items['admin/config/content/properties/templates/add'] = array(
     'title' => 'Add template',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('properties_template_admin_categories_form'),
+    'page arguments' => array('properties_template_admin_templates_form'),
     'file' => 'properties_template.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('categories'),
