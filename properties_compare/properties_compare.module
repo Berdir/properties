@@ -1,0 +1,241 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Module file for privatemsg_compare module.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function properties_compare_permission() {
+  return array(
+    'compare properties' => array(
+      'title' => t('Compare properties of different entities'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function properties_compare_menu() {
+  $item['properties/compare'] = array(
+    'title' => 'Comparison',
+    'page callback' => 'properties_compare_page',
+    'file' => 'properties_compare.pages.inc',
+    'access arguments' => array('compare properties'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $item;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function properties_compare_entity_view($entity, $type, $view_mode, $langcode) {
+  $extra_fields = field_extra_fields_get_display($type, field_extract_bundle($type, $entity), $view_mode);
+  // Verify if button should be displayed for this view mode.
+  if (isset($extra_fields['properties_compare']) && (!isset($extra_fields['properties_compare']['visibility']) || $extra_fields['properties_compare']['visibility'])) {
+    $entity->content['properties_compare'] = drupal_get_form('properties_compare_add_form_' . properties_compare_create_key($type, $entity), $type, $entity);
+  }
+}
+
+/**
+ * Implements hook_field_extras_fields().
+ */
+function properties_compare_field_extra_fields() {
+  $bundles = array();
+  $fields = field_info_fields();
+  // Collect bundles with a properties field attached to them.
+  foreach ($fields as $field) {
+    if ($field['type'] == 'properties') {
+      $bundles += $field['bundles'];
+    }
+  }
+
+  $extra = array();
+  // Add the properties_compare extra field to all these bundles.
+  foreach ($bundles as $entity_type => $entity_bundles) {
+    foreach ($entity_bundles as $bundle) {
+      $extra[$entity_type][$bundle]['display'] = array(
+        'properties_compare' => array(
+          'label' => t('Properties compare button'),
+          'description' => t('Displays a button that allows to add the entity to the comparison list'),
+          'weight' => 10,
+        )
+      );
+    }
+  }
+  return $extra;
+}
+
+/**
+ * Implements hook_forms().
+ */
+function properties_compare_forms($form_id, $args) {
+  if (strpos($form_id, 'properties_compare_add') !== FALSE) {
+    return array(
+      $form_id => array(
+        'callback' => 'properties_compare_add_form',
+      )
+    );
+  }
+}
+
+/**
+ * Form builder function; displays a form to add an entity to the compare list.
+ */
+function properties_compare_add_form($form, &$form_state, $entity_type, $entity) {
+  $form['entity_type'] = array(
+    '#type' => 'value',
+    '#value' => $entity_type,
+  );
+  $form['entity'] = array(
+    '#type' => 'value',
+    '#value' => $entity,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Compare'),
+  );
+  return $form;
+}
+
+/**
+ * Build a unique string key for the given entity.
+ *
+ * @param $entity_type
+ *   Type of entity, for example node or comment.
+ * @param $entity
+ *   Entity object.
+ *
+ * @return
+ *   A unique key in the form of entitytype_id.
+ */
+function properties_compare_create_key($entity_type, $entity) {
+  list($id,,) = entity_extract_ids($entity_type, $entity);
+  return $entity_type . '_' . $id;
+}
+
+/**
+ * Returns the current compare list.
+ *
+ * @return
+ *   Returns the compare list as an array by reference.
+ */
+function &properties_compare_list() {
+  if (!isset($_SESSION['properties_compare_list'])) {
+    $_SESSION['properties_compare_list'] = array();
+  }
+  return $_SESSION['properties_compare_list'];
+}
+
+/**
+ * Add a new entity to the compare list.
+ *
+ * @param $entity_type
+ *   Type of entity, for example node or comment.
+ * @param $entity
+ *   Entity object.
+ */
+function properties_compare_list_add($entity_type, $entity) {
+  $list = &properties_compare_list();
+  $list[properties_compare_create_key($entity_type, $entity)] = array(
+    'entity_type' => $entity_type,
+    'entity' => $entity,
+  );
+}
+
+/**
+ * Clear the compare list.
+ */
+function properties_compare_list_clear() {
+  $list = &properties_compare_list();
+  $list = array();
+}
+
+/**
+ * Submit callback for add form.
+ */
+function properties_compare_add_form_submit($form, &$form_state) {
+  properties_compare_list_add($form_state['values']['entity_type'], $form_state['values']['entity']);
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function properties_compare_block_info() {
+  $blocks['compare_list'] = array(
+    'info' => t('Compare list'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function properties_compare_block_view($delta = '') {
+  if ($delta == 'compare_list') {
+    if ($list = properties_compare_list()) {
+      return array(
+        'subject' => t('Compare list'),
+        'content' => drupal_get_form('properties_compare_list_form', $list),
+      );
+    }
+  }
+}
+
+/**
+ * Form builder function; display comparison list.
+ */
+function properties_compare_list_form($form, &$form_state, $list) {
+  $items = array();
+  foreach ($list as $compare_item) {
+    $items[] = entity_label($compare_item['entity_type'], $compare_item['entity']);
+  }
+
+  $form['items'] = array(
+    '#theme' => 'item_list',
+    '#items' => $items,
+  );
+
+  $form['clear'] = array(
+    '#type' => 'submit',
+    '#submit' => array('propertis_compare_list_form_clear_submit'),
+    '#value' => t('Clear'),
+  );
+
+  if (count($items) > 1) {
+    $form['compare'] = array(
+      '#type' => 'submit',
+      '#submit' => array('propertis_compare_list_form_compare_submit'),
+      '#value' => t('Compare'),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Submit callback for block list form, redirect to comparison table.
+ */
+function propertis_compare_list_form_compare_submit($form, &$form_state) {
+  $form_state['redirect'] = 'properties/compare';
+}
+
+/**
+ * Submit callback for block list form, clear compare list.
+ */
+function propertis_compare_list_form_clear_submit($form, &$form_state) {
+  properties_compare_list_clear();
+}
+
+/**
+ * Callback function to check if the categorie is used in more than one entity.
+ */
+function properties_compare_filter_categories($item) {
+  return count($item) > 1;
+}
