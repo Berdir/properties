@@ -224,3 +224,41 @@ function properties_template_admin_templates_add($form, &$form_state) {
   $form_state['redirect'] = 'admin/config/content/properties/templates';
   drupal_set_message(t('Template created.'));
 }
+
+/**
+ * Form builder; Submit callback to save a template and redirect to list.
+ */
+function properties_template_admin_templates_save($form, &$form_state) {
+  properties_template_save($form_state['template']);
+  $form_state['redirect'] = 'admin/config/content/properties/templates';
+  drupal_set_message(t('Template updated.'));
+}
+
+/**
+ * Form builder; Submit callback to save a template and stay on form.
+ */
+function properties_template_admin_templates_add_another($form, &$form_state) {
+  properties_template_save($form_state['template']);
+  drupal_set_message(t('Template created.'));
+}
+
+
+/**
+ * Form builder function; Provide a confirmation form to delete a template.
+ */
+function properties_template_admin_templates_delete($form, &$form_state, $template) {
+  $form['template'] = array(
+    '#type' => 'value',
+    '#value' => $template,
+  );
+
+  return confirm_form($form, t('Delete template %template', array('%template' => $template->label)), '');
+}
+
+/**
+ * Submit handler to delete a template.
+ */
+function properties_template_admin_templates_delete_submit($form, &$form_state) {
+  properties_template_delete($form_state['values']['template']);
+  drupal_set_message(t('Template deleted.'));
+}
