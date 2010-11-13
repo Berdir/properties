@@ -141,9 +141,9 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     '#value' => t('Add another category'),
     '#categories' => array('class' => array('field-add-more-submit')),
     '#limit_validation_errors' => array(array('categories')),
-    '#submit' => array('properties_admin_add_more_submit'),
+    '#submit' => array('properties_template_admin_add_more_submit'),
     '#ajax' => array(
-      'callback' => 'properties_admin_add_more_js',
+      'callback' => 'properties_template_admin_add_more_js',
       'wrapper' => 'attributes-wrapper',
       'effect' => 'fade',
     ),
@@ -217,6 +217,20 @@ function properties_template_admin_templates_form_validate($form, &$form_state) 
 }
 
 /**
+ * Ajax callback in response to a new empty widget being added to the form.
+ *
+ * This returns the new page content to replace the page content made obsolete
+ * by the form submission.
+ *
+ * @see field_add_more_submit()
+ */
+function properties_template_admin_add_more_js($form, $form_state) {
+  $element = $form['categories'];
+
+  return $element;
+}
+
+/**
  * Form builder; Submit callback to save a template and redirect to list.
  */
 function properties_template_admin_templates_add($form, &$form_state) {
@@ -242,6 +256,24 @@ function properties_template_admin_templates_add_another($form, &$form_state) {
   drupal_set_message(t('Template created.'));
 }
 
+/**
+ * Submit handler for the "Add another item" button of a field form.
+ *
+ * This handler is run regardless of whether JS is enabled or not. It makes
+ * changes to the form state. If the button was clicked with JS disabled, then
+ * the page is reloaded with the complete rebuilt form. If the button was
+ * clicked with JS enabled, then ajax_form_callback() calls field_add_more_js()
+ * to return just the changed part of the form.
+ */
+function properties_template_admin_add_more_submit($form, &$form_state) {
+  $attribute =
+  $form_state['template']->categories[] = (object)array(
+    'label' => '',
+    'name' => '',
+    'weight' => count($form_state['template']->categories),
+  );
+  $form_state['rebuild'] = TRUE;
+}
 
 /**
  * Form builder function; Provide a confirmation form to delete a template.

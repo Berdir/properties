@@ -33,8 +33,6 @@ function properties_template_menu() {
     'type' => MENU_LOCAL_ACTION,
   );
 
-  //TODO: generates Notice: Undefined offset: 6 in _menu_translate() (line 739 of /Users/stockli/Sites/php/drupal/includes/menu.inc).
-
   $items['admin/config/content/properties/templates/edit/%properties_template'] = array(
     'title' => 'Edit template',
     'page callback' => 'drupal_get_form',
