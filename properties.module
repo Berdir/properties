@@ -678,6 +678,9 @@ function properties_attribute_delete($attribute) {
  *   Machine readable name of the attribute.
  */
 function properties_attribute_load($name) {
+  if (empty($name)) {
+    return NULL;
+  }
   $function_name = _properties_get_call('attribute', 'load');
   return $function_name($name);
 }
@@ -742,6 +745,9 @@ function properties_category_delete($category) {
  *   Machine readable name of the category.
  */
 function properties_category_load($name) {
+  if (empty($name)) {
+    return NULL;
+  }
   $function_name = _properties_get_call('category', 'load');
   return $function_name($name);
 }
