@@ -679,7 +679,7 @@ function properties_attribute_delete($attribute) {
  */
 function properties_attribute_load($name) {
   if (empty($name)) {
-    return NULL;
+    return FALSE;
   }
   $function_name = _properties_get_call('attribute', 'load');
   return $function_name($name);
@@ -746,7 +746,7 @@ function properties_category_delete($category) {
  */
 function properties_category_load($name) {
   if (empty($name)) {
-    return NULL;
+    return FALSE;
   }
   $function_name = _properties_get_call('category', 'load');
   return $function_name($name);
