@@ -116,7 +116,7 @@ function properties_compare_add_form($form, &$form_state, $entity_type, $entity)
  *   A unique key in the form of entitytype_id.
  */
 function properties_compare_create_key($entity_type, $entity) {
-  list($id,,) = entity_extract_ids($entity_type, $entity);
+  list($id, , ) = entity_extract_ids($entity_type, $entity);
   return $entity_type . '_' . $id;
 }
 
