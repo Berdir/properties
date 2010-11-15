@@ -56,7 +56,7 @@ function properties_sql_properties_attribute_load_multiple($names = array()) {
  *   Number of attributes per page.
  */
 function properties_sql_properties_attribute_load_paging($per_page, array $options = array()) {
-  $query = db_select('properties_attribute','pa')->extend('PagerDefault')
+  $query = db_select('properties_attribute', 'pa')->extend('PagerDefault')
     ->fields('pa')
     ->limit($per_page);
 
@@ -91,7 +91,7 @@ function properties_sql_properties_category_save($category) {
     ->execute();
 
   $insert = db_insert('properties_category_attribute')
-    ->fields(array('category_name', 'attribute_name','weight'));
+    ->fields(array('category_name', 'attribute_name', 'weight'));
   foreach ($category->attributes as $attribute) {
     $insert->values(array(
       'category_name' => $category->name,
@@ -137,7 +137,7 @@ function properties_sql_properties_category_load($name) {
 function properties_sql_properties_category_load_multiple($names = array()) {
   $result = db_query("SELECT * FROM {properties_category} WHERE name in (:categories)", array(':categories' => $names));
   $categories = $result->fetchAllAssoc('name');
-  foreach($categories as $category) {
+  foreach ($categories as $category) {
     $category->attributes = array();
   }
   $result = db_query("SELECT * FROM {properties_category_attribute} pac INNER JOIN {properties_attribute} pa ON pac.attribute_name = pa.name WHERE category_name in (:categories) ORDER BY pac.weight", array(':categories' => $names));
@@ -153,7 +153,7 @@ function properties_sql_properties_category_load_multiple($names = array()) {
  *   Number of categories per page.
  */
 function properties_sql_properties_category_load_paging($per_page, array $options = array()) {
-  $query = db_select('properties_category','pc')->extend('PagerDefault')
+  $query = db_select('properties_category', 'pc')->extend('PagerDefault')
     ->fields('pc')
     ->limit($per_page);
 
@@ -189,7 +189,7 @@ function properties_sql_properties_template_save($template) {
     ->execute();
 
   $insert = db_insert('properties_template_category')
-    ->fields(array('template_name', 'category_name','weight'));
+    ->fields(array('template_name', 'category_name', 'weight'));
   foreach ($template->categories as $category) {
     $insert->values(array(
       'template_name' => $template->name,
@@ -239,7 +239,7 @@ function properties_sql_properties_template_load($name) {
 function properties_sql_properties_template_load_multiple($names = array()) {
   $result = db_query("SELECT * FROM {properties_template} WHERE name in (:templates)", array(':templates' => $names));
   $templates = $result->fetchAllAssoc('name');
-  foreach($templates as $template) {
+  foreach ($templates as $template) {
     $template->attributes = array();
   }
   $result = db_query("SELECT * FROM {properties_template_category} ptc INNER JOIN {properties_category} pc ON ptc.category_name = pc.name WHERE template_name in (:templates) ORDER BY ptc.weight", array(':templates' => $names));
@@ -255,7 +255,7 @@ function properties_sql_properties_template_load_multiple($names = array()) {
  *   Number of templates per page.
  */
 function properties_sql_properties_template_load_paging($per_page, array $options = array()) {
-  $query = db_select('properties_template','pt')->extend('PagerDefault')
+  $query = db_select('properties_template', 'pt')->extend('PagerDefault')
     ->fields('pt')
     ->limit($per_page);
 
