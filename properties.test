@@ -157,7 +157,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
    */
   protected function loginAdmin() {
     if (empty($this->admin)) {
-      $this->admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content', 'administer properties attributes', 'administer properties categories', 'add properties attributes', 'add properties categories'));
+      $this->admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content', 'edit any page content', 'administer properties attributes', 'administer properties categories', 'add properties attributes', 'add properties categories'));
     }
     $this->drupalLogin($this->admin);
   }
@@ -229,6 +229,9 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
     $this->createProperties();
     $this->createField();
 
+    // Create a single, separate attribute.
+    $attribute = $this->createAttribute();
+
     // Add first category
     $node = array(
       'title' => $this->randomName(),
@@ -277,13 +280,38 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
     // Make sure that the moved attribute is shown in the correct category.
     // Meaning, after the last attribute in that category.
     // @todo: Test does not work yet.
-    //$this->assertPattern('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s', t('Moved attribute is shown in the correct place.'));
+    debug('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s');
+    $this->assertPattern('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s', t('Moved attribute is shown in the correct place.'));
 
     // Make sure the default order in category 2 is correct.
     $this->assertPattern('/' . $this->categories[2]->label . '.*' . $this->attributes[2][0]->label . '.*' . $this->attributes[2][1]->label . '.*' . $this->attributes[2][2]->label . '/s', t('Default order in category 2 is correct.'));
 
     // Make sure the changed order in category 0 is correct.
     $this->assertPattern('/' . $this->attributes[0][2]->label . '.*' . $this->attributes[0][0]->label . '/s', t('Changed order in category 0 is correct.'));
+
+    // Try editing the content.
+    $this->clickLink('Edit');
+
+    // Add a new attribute.
+    $edit = array(
+      $this->field_prefix . '[attribute_category]' => $this->categories[1]->name,
+      $this->field_prefix . '[new_attribute]' => $attribute->name,
+    );
+    $this->drupalPost(NULL, $edit, t('Add attribute'));
+
+    $edit = array(
+      $this->getAttributeFormName($this->categories[1], $this->attributes[0][1], 'category') => $this->categories[0]->name,
+      $this->getAttributeFormName($this->categories[1], $this->attributes[0][1], '_weight') => 10,
+      $this->getAttributeFormName($this->categories[1], $attribute) => $value = $this->randomName(20),
+      $this->getAttributeFormName($this->categories[1], $attribute, '_weight') => -10,
+    );
+    $this->drupalPost(NULL, $edit, t('Save'));
+
+    // Verify that the attribute was added.
+    $this->assertPattern('/' . $this->categories[1]->label . '.*' . $attribute->label . '.*' . $this->attributes[1][2]->label . '/s', t('Newly added attribute is shown in the correct category.'));
+
+    // Verify that the moved attribute has been moved back.
+    $this->assertPattern('/' . $this->categories[0]->label . '.*' . $this->attributes[0][2]->label . '.*' . $this->attributes[0][0]->label . '.*' . $this->attributes[0][1]->label . '.*' . $this->categories[1]->label . '/s', t('Changed order in category 0 is correct.'));
   }
 
   /**
