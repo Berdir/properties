@@ -342,28 +342,8 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     }
   }
 
-  // Check if we need to load a new category.
-  if (!empty($form_state[$field['field_name']]['new_category'])) {
-    $new_category = $form_state[$field['field_name']]['new_category'];
-    $categories[$new_category->name] = array(
-      '_weight' => count($categories),
-      'category' => $new_category,
-      'properties' => array(),
-    );
-    foreach ($new_category->attributes as $property) {
-      $categories[$new_category->name]['properties'][$property->name] = array(
-        'attribute' => $property->name,
-        'category' => $form_state[$field['field_name']]['new_category']->name,
-        'value' => '',
-        '_weight' => count($categories[$new_category->name]['properties']),
-      );
-    }
-    unset($form_state[$field['field_name']]['new_category']);
-  }
-
   uasort($categories, '_field_sort_items_helper');
   $category_list = array();
-
 
   foreach ($categories as $category_name => $item) {
     $category_list[$item['category']->name] = $item['category']->label;
@@ -520,8 +500,19 @@ function properties_widget_add_category_submit($form, &$form_state) {
   if (!isset($form_state[$field_name]['categories'][$values['new_category']])) {
     $category = properties_category_load($values['new_category']);
     if (!empty($category)) {
-      $form_state[$field_name]['new_category'] = $category;
-      form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
+      $form_state[$field_name]['categories'][$category->name] = array(
+        '_weight' => count($form_state[$field_name]['categories']),
+        'category' => $category,
+        'properties' => array(),
+      );
+      foreach ($category->attributes as $property) {
+        $form_state[$field_name]['categories'][$category->name]['properties'][$property->name] = array(
+          'attribute' => $property->name,
+          'category' => $category->name,
+          'value' => '',
+          '_weight' => count($form_state[$field_name]['categories'][$category->name]['properties']),
+        );
+      }
     }
     else {
       form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
