@@ -150,7 +150,7 @@ function properties_sql_schema() {
         'table' => 'properties_category',
         'columns' => array('name' => 'category_name')
         ),
-       ),
+      ),
     // MARIA Storage engine key length must not be longer than 1024 bytes.
     'primary key'     => array(array('template_name', 100), array('category_name', 100)),
   );
