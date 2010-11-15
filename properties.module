@@ -599,13 +599,13 @@ function properties_widget_update_js($form, $form_state) {
  * Implements hook_field_formatter_view().
  */
 function properties_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
- $element = array();
- $items_by_category = array();
- foreach ($items as $item) {
-   if (!isset($items_by_category[$item['category']])) {
-     $items_by_category[$item['category']] = array();
-   }
-   $items_by_category[$item['category']][] = $item;
+  $element = array();
+  $items_by_category = array();
+  foreach ($items as $item) {
+    if (!isset($items_by_category[$item['category']])) {
+      $items_by_category[$item['category']] = array();
+    }
+    $items_by_category[$item['category']][] = $item;
   }
 
   $categories = array();
@@ -622,7 +622,7 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
           '#type' => 'user_profile_category',
           '#title' => check_plain($categories[$category]->label),
         );
-        
+
         foreach ($items_in_category as $item) {
           if (isset($categories[$category]->attributes[$item['attribute']])) {
             $label = $categories[$category]->attributes[$item['attribute']]->label;
@@ -659,7 +659,7 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
           $rows[] = array($label, $item['value']);
         }
       }
-      $element[0]['#markup'] = theme('table',array('header' => null, 'rows' => $rows));
+      $element[0]['#markup'] = theme('table', array('rows' => $rows));
       break;
   }
 
@@ -730,7 +730,7 @@ function properties_attribute_load_multiple($names = array()) {
 
 /**
  * Load a paged amount of attributes.
- * 
+ *
  * @param $per_page
  *   Number of attributes per page.
  */

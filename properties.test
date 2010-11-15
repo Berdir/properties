@@ -86,7 +86,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
    */
   protected function createAttribute($name = NULL, $label = NULL) {
     $attribute = array(
-      'name' => empty($name) ? strtolower($this->randomName(8)) : $name,
+      'name' => empty($name) ? drupal_strtolower($this->randomName(8)) : $name,
       'label' => empty($label) ? $this->randomName(20) : $label,
     );
     $this->drupalPost('admin/config/content/properties/attributes/add', $attribute, t('Add'));
@@ -111,7 +111,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
    */
   protected function createCategory($name = NULL, $label = NULL, $attributes = array()) {
     $category = array(
-      'name' => empty($name) ? strtolower($this->randomName(8)) : $name,
+      'name' => empty($name) ? drupal_strtolower($this->randomName(8)) : $name,
       'label' => empty($label) ? $this->randomName(20) : $label,
     );
 
@@ -125,7 +125,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
       $this->drupalPost(NULL, $newAttribute, t('Add another attribute'));
 
     }
-    $this->drupalPost(NULL,NULL,t('Add'));
+    $this->drupalPost(NULL, NULL, t('Add'));
 
     $category_object = properties_category_load($category['name']);
     $this->assertEqual($category_object->label, $category['label']);
@@ -173,7 +173,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
     // Create a new field.
     $field = array(
       'fields[_add_new_field][label]' => $this->field_label = $this->randomName(),
-      'fields[_add_new_field][field_name]' => $this->field_name = strtolower($this->randomName()),
+      'fields[_add_new_field][field_name]' => $this->field_name = drupal_strtolower($this->randomName()),
       'fields[_add_new_field][type]' => 'properties',
       'fields[_add_new_field][widget_type]' => 'properties_table',
     );
@@ -201,7 +201,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
    *   Name of the form field name.
    */
   function getAttributeFormName($category, $attribute, $fieldname = 'value') {
-    return $this->field_prefix . '[listing][' . $category->name . '][properties][' . $attribute->name . '][' . $fieldname .']';
+    return $this->field_prefix . '[listing][' . $category->name . '][properties][' . $attribute->name . '][' . $fieldname . ']';
   }
 }
 
@@ -213,7 +213,7 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
    * Implementats getInfo().
    */
   public static function getInfo() {
-    return array (
+    return array(
       'name' => t('Properties creation'),
       'description' => t('Tests properties field type.'),
       'group' => t('Properties'),
@@ -359,7 +359,7 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
    * Implementation of getInfo().
    */
   public static function getInfo() {
-    return array (
+    return array(
       'name' => t('Properties administration'),
       'description' => t('Category and Attribute administration tests'),
       'group' => t('Properties'),
@@ -377,7 +377,7 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
 
     // Create a category.
     $category = array(
-      'name' => strtolower($this->randomName(8)),
+      'name' => drupal_strtolower($this->randomName(8)),
       'label' => $this->randomName(20),
       'attributes[0][attribute]' => $attributes[3]->name,
     );
@@ -399,13 +399,13 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
 
     // Add a new attribute, try to submit.
     $new_attribute = array(
-      'attributes[2][attribute]' => $name = strtolower($this->randomName()),
+      'attributes[2][attribute]' => $name = drupal_strtolower($this->randomName()),
     );
     $this->drupalPost(NULL, $new_attribute, t('Add'));
     $this->assertText(t('Attribute @name does not exist, a label must be provided to create it.', array('@name' => $name)));
 
     $label = array(
-      'attributes[' . $name  . '][label]' => $new_label = $this->randomName(20),
+      'attributes[' . $name . '][label]' => $new_label = $this->randomName(20),
     );
     $this->drupalPost(NULL, $label, t('Add'));
     $this->assertText(t('Category created.'));
@@ -430,7 +430,7 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
       $attributes[$i] = $this->createAttribute();
     }
     // Create category with these existing attributes.
-    $category = $this->createCategory(strtolower($this->randomName(8)), $this->randomName(20),$attributes);
+    $category = $this->createCategory(drupal_strtolower($this->randomName(8)), $this->randomName(20), $attributes);
 
     // Create new attribute.
     $attribute = $this->createAttribute();
@@ -448,16 +448,16 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
 
     // Now check if the attribute was added to that category.
     $cat = properties_sql_properties_category_load($category->name);
-    $newAttributeInCategory = false;
-    $oldAttributeInCategory = false;
+    $newAttributeInCategory = FALSE;
+    $oldAttributeInCategory = FALSE;
 
     // As the order isn't given, I walk trough the list of attributes.
-    foreach($cat->attributes as $attr) {
+    foreach ($cat->attributes as $attr) {
       if ($attr->name === $attribute->name) {
-        $newAttributeInCategory = true;
+        $newAttributeInCategory = TRUE;
       }
       if ($attr->name === $attributes[0]->name) {
-        $oldAttributeInCategory = true;
+        $oldAttributeInCategory = TRUE;
       }
     }
     $this->AssertText(t('Category updated.'));
@@ -466,7 +466,6 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     // The old shouldn't.
     $this->AssertFalse(isset($cat->attributes[$attributes[0]->name]));
 
-    
     // Delete created property again.
     $this->drupalGet('admin/config/content/properties/categories');
     $this->AssertText($category->name);

@@ -16,7 +16,7 @@ function properties_admin_categories_list() {
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($categories as $category) {
-    $links = array(l('edit', 'admin/config/content/properties/categories/edit/' . $category->name, $url_options), l('delete', 'admin/config/content/properties/categories/delete/' . $category->name, $url_options));
+    $links = array(l(t('edit'), 'admin/config/content/properties/categories/edit/' . $category->name, $url_options), l(t('delete'), 'admin/config/content/properties/categories/delete/' . $category->name, $url_options));
 
     $rows[] = array(
       $category->name,
@@ -37,7 +37,7 @@ function properties_admin_attributes_list() {
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($attributes as $attribute) {
-    $links = array(l('edit', 'admin/config/content/properties/attributes/edit/' . $attribute->name, $url_options), l('delete', 'admin/config/content/properties/attributes/delete/' . $attribute->name, $url_options));
+    $links = array(l(t('edit'), 'admin/config/content/properties/attributes/edit/' . $attribute->name, $url_options), l(t('delete'), 'admin/config/content/properties/attributes/delete/' . $attribute->name, $url_options));
 
     $rows[] = array(
       $attribute->name,
@@ -149,10 +149,10 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
   }
 
   // Make sure there are always 3 empty attribute displayed.
-  $add_empty = true;
+  $add_empty = TRUE;
   foreach ($form_state['category']->attributes as $attribute) {
     if (empty($attribute->name)) {
-      $add_empty = false;
+      $add_empty = FALSE;
       break;
     }
   }
@@ -209,7 +209,8 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
         '#maxlength' => 255,
         '#required' => TRUE,
       );
-    } else {
+    }
+    else {
       $element['label'] = array(
         '#markup' => $attribute->label,
       );
@@ -308,7 +309,6 @@ function properties_admin_categories_form_validate($form, &$form_state) {
         if (empty($form_state['category']->attributes[$attribute['attribute']]->label)) {
           // Not possible to do this as a proper form validation step because
           // the form is not rebuilt in case of validation errors.
-          //form_set_error('attributes[' . $delta . '][label]', t('Attribute does not exist, label is required.'));
           drupal_set_message(t('Attribute %name does not exist, a label must be provided to create it.', array('%name' => $attribute['attribute'])), 'error');
           $form_state['rebuild'] = TRUE;
         }
@@ -359,7 +359,7 @@ function theme_properties_admin_categories_attributes_form($variables) {
 
   $table_id = 'attributes-values';
   $order_class = 'attributes-delta-order';
-  $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required. ') . '">*</span>' : '';
+  $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required.') . '">*</span>' : '';
 
   $header = array(
     array(
@@ -429,8 +429,6 @@ function properties_admin_update_label_js($form, &$form_state) {
  * to return just the changed part of the form.
  */
 function properties_admin_add_more_submit($form, &$form_state) {
-  $attribute = 
-
   $form_state['category']->attributes[] = (object)array(
     'label' => '',
     'name' => '',
