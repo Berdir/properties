@@ -333,15 +333,6 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
   }
   $categories = &$form_state[$field['field_name']]['categories'];
 
-  // Retrieve any values set in $form_state, as will be the case during AJAX
-  // rebuilds of this form.
-  if (isset($form_state['values'][$field['field_name']][$langcode]['listing'])) {
-    foreach ($form_state['values'][$field['field_name']][$langcode]['listing'] as $category) {
-      $categories[$category['name']]['_weight'] = $category['_weight'];
-      $categories[$category['name']]['properties'] = $category['properties'];
-    }
-  }
-
   uasort($categories, '_field_sort_items_helper');
   $category_list = array();
 
@@ -463,8 +454,8 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     );
   }
 
-  if (user_access('add properties attributes')) {
-    $element['attribute_category'] = array(
+  if (!empty($category_list) && user_access('add properties attributes')) {
+    $elements['attribute_category'] = array(
       '#type' => 'select',
       '#options' => $category_list,
     );
@@ -492,10 +483,13 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
   return $elements;
 }
 
+/**
+ * Submit callback to add a category.
+ */
 function properties_widget_add_category_submit($form, &$form_state) {
   $field_name = $form_state['triggering_element']['#parents'][0];
   $langcode = $form[$field_name]['#language'];
-  $values = reset($form_state['values'][$field_name]);
+  $values = $form_state['values'][$field_name][$langcode];
 
   if (!isset($form_state[$field_name]['categories'][$values['new_category']])) {
     $category = properties_category_load($values['new_category']);
@@ -513,6 +507,8 @@ function properties_widget_add_category_submit($form, &$form_state) {
           '_weight' => count($form_state[$field_name]['categories'][$category->name]['properties']),
         );
       }
+      // Clear the new category form field.
+      form_set_value($form[$field_name][$langcode]['new_category'], '', $form_state);
     }
     else {
       form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
@@ -521,6 +517,34 @@ function properties_widget_add_category_submit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
 }
 
+/**
+ * Submit callback to add an attribute.
+ */
+function properties_widget_add_attribute_submit($form, &$form_state) {
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  $langcode = $form[$field_name]['#language'];
+  $values = $form_state['values'][$field_name][$langcode];
+
+  $attribute = properties_attribute_load($values['new_attribute']);
+  if (!empty($attribute)) {
+    $form_state[$field_name]['categories'][$values['attribute_category']]['properties'][$attribute->name] = array(
+      'attribute' => $attribute->name,
+      'category' => $values['attribute_category'],
+      'value' => '',
+      '_weight' => count($form_state[$field_name]['categories'][$values['attribute_category']]['properties']),
+    );
+    // Clear the new category form field.
+    form_set_value($form[$field_name][$langcode]['new_attribute'], '', $form_state);
+  }
+  else {
+    form_set_error($field_name . '][' . $langcode . '][new_attribute', t('Attribute empty or invalid.'));
+  }
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * AJAX callback that returns the properties widget.
+ */
 function properties_widget_update_js($form, $form_state) {
   $field_name = $form_state['triggering_element']['#parents'][0];
   return $form[$field_name];
