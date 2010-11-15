@@ -120,5 +120,4 @@ function properties_template_save($template) {
 function properties_template_delete($template) {
   $function_name = _properties_get_call('template', 'delete');
   return $function_name($template);
-  
 }

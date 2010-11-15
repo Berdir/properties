@@ -16,7 +16,7 @@ function properties_template_admin_templates_list() {
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($templates as $template) {
-    $links = array(l('edit', 'admin/config/content/properties/templates/edit/' . $template->name, $url_options), l('delete', 'admin/config/content/properties/templates/delete/' . $template->name, $url_options));
+    $links = array(l(t('edit'), 'admin/config/content/properties/templates/edit/' . $template->name, $url_options), l(t('delete'), 'admin/config/content/properties/templates/delete/' . $template->name, $url_options));
 
     $rows[] = array(
       $template->name,
@@ -44,10 +44,10 @@ function properties_template_admin_templates_form($form, &$form_state, $template
   }
 
   // Make sure there are always 3 empty categories displayed.
-  $add_empty = true;
+  $add_empty = TRUE;
   foreach ($form_state['template']->categories as $category) {
     if (empty($category->name)) {
-      $add_empty = false;
+      $add_empty = FALSE;
       break;
     }
   }
@@ -106,7 +106,8 @@ function properties_template_admin_templates_form($form, &$form_state, $template
         '#maxlength' => 255,
         '#required' => TRUE,
       );
-    } else {
+    }
+    else {
       $element['label'] = array(
         '#markup' => $category->label,
       );
