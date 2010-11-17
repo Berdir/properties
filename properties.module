@@ -393,6 +393,8 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     }
   }
 
+  $id = 'properties-' . drupal_html_id($field['field_name']) . '-wrapper';
+
   $elements['listing'] = array();
   $tabindex = 1;
   foreach ($categories as $category_name => $category) {
@@ -414,6 +416,19 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       '#title_display' => 'invisible',
       '#default_value' => $category['_weight'],
       '#weight' => 100,
+    );
+
+    $elements['listing'][$category_name]['delete'] = array(
+      '#type' => 'submit',
+      '#value' => t('Delete'),
+      '#submit' => array('properties_widget_remove_category'),
+      '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+      '#name' => $category_name,
+      '#ajax' => array(
+        'callback' => 'properties_widget_update_js',
+        'wrapper' => $id,
+        'effect' => 'fade',
+      ),
     );
 
     usort($category['properties'], '_field_sort_items_helper');
@@ -459,12 +474,25 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#weight' => 100,
         '#access' => user_access('add properties attributes'),
       );
+
+      $element['delete'] = array(
+        '#type' => 'submit',
+        '#value' => t('Delete'),
+        '#submit' => array('properties_widget_remove_attribute'),
+        '#access' => user_access('add properties attributes'),
+        '#name' => $property['attribute'],
+        '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+        '#ajax' => array(
+          'callback' => 'properties_widget_update_js',
+          'wrapper' => $id,
+          'effect' => 'fade',
+        ),
+      );
+
       $elements['listing'][$category_name]['properties'][$property['attribute']] = $element;
       $tabindex++;
     }
   }
-
-  $id = 'properties-' . drupal_html_id($field['field_name']) . '-wrapper';
 
   $elements += array(
     '#type' => 'fieldset',
@@ -584,6 +612,40 @@ function properties_widget_add_attribute_submit($form, &$form_state) {
   else {
     form_set_error($field_name . '][' . $langcode . '][new_attribute', t('Attribute empty or invalid.'));
   }
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit callback to remove a single attribute.
+ */
+function properties_widget_remove_attribute($form, &$form_state) {
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  $langcode = $form[$field_name]['#language'];
+  $values = $form_state['values'][$field_name][$langcode];
+
+  // @todo: Verify that this always works.
+  $category_name = $form_state['triggering_element']['#parents'][3];
+  $attribute_name = $form_state['triggering_element']['#parents'][5];
+
+  unset($form_state[$field_name]['categories'][$category_name]['properties'][$attribute_name]);
+
+  $form_state['rebuild'] = TRUE;
+}
+
+
+/**
+ * Submit callback to remove a category.
+ */
+function properties_widget_remove_category($form, &$form_state) {
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  $langcode = $form[$field_name]['#language'];
+  $values = $form_state['values'][$field_name][$langcode];
+
+  // @todo: Verify that this always works.
+  $category_name = $form_state['triggering_element']['#parents'][3];
+
+  unset($form_state[$field_name]['categories'][$category_name]);
+
   $form_state['rebuild'] = TRUE;
 }
 

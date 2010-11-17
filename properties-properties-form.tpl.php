@@ -12,6 +12,7 @@ if (user_access('add properties attributes')) {
     t('Value'),
     t('Category'),
     t('Order'),
+    t('Delete'),
   );
 }
 else {
@@ -40,6 +41,7 @@ foreach (element_children($element['listing']) as $category_name) {
     $cells[] = '&nbsp;';
   }
   $cells[] = drupal_render($category['category']) . drupal_render($category['name']) . drupal_render($category['_weight']);
+  $cells[] = drupal_render($category['delete']);
   $rows[] = array(
     'data' => $cells,
     'class' => array('draggable', 'tabledrag-root'),
@@ -65,6 +67,7 @@ foreach (element_children($element['listing']) as $category_name) {
     if (user_access('add properties attributes')) {
       $cells[] = drupal_render($property['category']);
       $cells[] = drupal_render($property['_weight']);
+      $cells[] = drupal_render($property['delete']);
     }
     else {
       $cells[] = '&nbsp;';
