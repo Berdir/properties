@@ -249,6 +249,7 @@ function properties_field_schema($field) {
 function properties_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
   if (!empty($items[0])) {
     $categories = $items[0];
+    $items = array();
 
     // First step, move items into correct category. Necessary to be able to sort
     // them withing their category.
@@ -262,20 +263,19 @@ function properties_field_presave($entity_type, $entity, $field, $instance, $lan
         }
       }
     }
-  }
 
-  // Next step, order categories and attributes.
-  uasort($categories, '_field_sort_items_helper');
-  $items = array();
-  foreach ($categories as $category) {
-    uasort($category['properties'], '_field_sort_items_helper');
-    foreach ($category['properties'] as $property) {
-      // Add them in the sorted order to the items array.
-      $items[] = array(
-        'attribute' => $property['attribute'],
-        'value' => $property['value'],
-        'category' => $property['category'],
-      );
+    // Next step, order categories and attributes.
+    uasort($categories, '_field_sort_items_helper');
+    foreach ($categories as $category) {
+      uasort($category['properties'], '_field_sort_items_helper');
+      foreach ($category['properties'] as $property) {
+        // Add them in the sorted order to the items array.
+        $items[] = array(
+          'attribute' => $property['attribute'],
+          'value' => $property['value'],
+          'category' => $property['category'],
+        );
+      }
     }
   }
 }
