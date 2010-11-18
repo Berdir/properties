@@ -84,6 +84,9 @@ function properties_template_admin_templates_form($form, &$form_state, $template
   $categories = array();
   $delta = 0;
   foreach ($form_state['template']->categories as $name => $category) {
+    if (empty($category->name) && (isset($form_state['input']['categories'][$delta]))) {
+      unset($form_state['input']['categories'][$delta]);
+    }
     $element = array();
     $element['category'] = array(
       '#type' => 'textfield',
@@ -112,14 +115,13 @@ function properties_template_admin_templates_form($form, &$form_state, $template
         '#markup' => $category->label,
       );
     }
-
     // We name the element '_weight' to avoid clashing with elements
     // defined by widget.
     $element['_weight'] = array(
       '#type' => 'weight',
       '#title' => t('Weight for row @number', array('@number' => $delta)),
       '#title_display' => 'invisible',
-      '#default_value' => !empty($category->weight) ? $category->weight : $delta,
+      '#default_value' => $delta,
       '#weight' => 100,
     );
     $categories[!empty($category->name) ? $category->name : $delta] = $element;
@@ -184,26 +186,26 @@ function properties_template_admin_templates_form_validate($form, &$form_state) 
   $form_state['template']->label = $form_state['values']['label'];
   $form_state['template']->name = $form_state['values']['name'];
   $form_state['template']->categories = array();
-
+  uasort($form_state['values']['categories'], '_field_sort_items_value_helper');
   foreach ($form_state['values']['categories'] as $name => $category) {
     if (is_array($category) && isset($category['category'])) {
       if (empty($category['category'])) {
         $category_object = (object)array(
           'label' => '',
           'name' => '',
-          'weight' => !empty($category['_weight']) ? $category['_weight'] : count($form_state['template']->categories),
+          'weight' => count($form_state['template']->categories),
         );
         $form_state['template']->categories[$name] = $category_object;
       }
       elseif ($category_object = properties_category_load($category['category'])) {
-        $category_object->weight = $category['_weight'];
+        $category_object->weight = count($form_state['template']->categories);
         $form_state['template']->categories[$category_object->name] = $category_object;
       }
       else {
         // Update empty category.
         $form_state['template']->categories[$category['category']]->name = $category['category'];
         $form_state['template']->categories[$category['category']]->label = isset($category['label']) ? $category['label'] : '';
-        $form_state['template']->categories[$category['category']]->weight = $category['_weight'];
+        $form_state['template']->categories[$category['category']]->weight = count($form_state['template']->categories);
         $form_state['template']->categories[$category['category']]->new = TRUE;
 
         // If label is empty, add validation error.
@@ -268,12 +270,21 @@ function properties_template_admin_templates_add_another($form, &$form_state) {
  * to return just the changed part of the form.
  */
 function properties_template_admin_add_more_submit($form, &$form_state) {
-  $attribute =
   $form_state['template']->categories[] = (object)array(
     'label' => '',
     'name' => '',
     'weight' => count($form_state['template']->categories),
   );
+
+  foreach ($form_state['template']->categories as $name => $category) {
+
+    if (is_int($name)) {
+
+      unset($form_state['input']['categories'][$name]);
+    }
+    
+  }
+
   $form_state['rebuild'] = TRUE;
 }
 
@@ -310,8 +321,8 @@ function theme_properties_template_admin_templates_categories_form($variables) {
   $element = $variables['element'];
   $output = '';
 
-  $table_id = 'categories-values';
-  $order_class = 'categories-delta-order';
+  $table_id = 'templates-values';
+  $order_class = 'templates-delta-order';
   $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required.') . '">*</span>' : '';
 
   $header = array(
@@ -340,7 +351,7 @@ function theme_properties_template_admin_templates_categories_form($variables) {
 
   // Add the items as table rows.
   foreach ($items as $key => $item) {
-    $item['_weight']['#categories']['class'] = array($order_class);
+    $item['_weight']['#attributes']['class'] = array($order_class);
     $delta_element = drupal_render($item['_weight']);
 
     $label = drupal_render($item['label']);
@@ -357,7 +368,7 @@ function theme_properties_template_admin_templates_categories_form($variables) {
   }
 
   $output = '<div class="form-item">';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'categories' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
   $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
   $output .= '<div class="clearfix">' . drupal_render($add_more_button) . '</div>';
   $output .= '</div>';

@@ -189,6 +189,9 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
   $attributes = array();
   $delta = 0;
   foreach ($form_state['category']->attributes as $name => $attribute) {
+    if (empty($attribute->name) && (isset($form_state['input']['attributes'][$delta]))) {
+      unset($form_state['input']['attributes'][$delta]);
+    }
     $element = array();
     $element['attribute'] = array(
       '#type' => 'textfield',
@@ -222,7 +225,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
       '#type' => 'weight',
       '#title' => t('Weight for row @number', array('@number' => $delta)),
       '#title_display' => 'invisible',
-      '#default_value' => !empty($attribute->weight) ? $attribute->weight : $delta,
+      '#default_value' => $delta,
       '#weight' => 100,
     );
     $attributes[!empty($attribute->name) ? $attribute->name : $delta] = $element;
@@ -284,25 +287,26 @@ function properties_admin_categories_form_validate($form, &$form_state) {
   $form_state['category']->name = $form_state['values']['name'];
   $form_state['category']->attributes = array();
 
+  uasort($form_state['values']['attributes'], '_field_sort_items_value_helper');
   foreach ($form_state['values']['attributes'] as $name => $attribute) {
     if (is_array($attribute) && isset($attribute['attribute'])) {
       if (empty($attribute['attribute'])) {
         $attribute_object = (object)array(
           'label' => '',
           'name' => '',
-          'weight' => !empty($attribute['_weight']) ? $attribute['_weight'] : count($form_state['category']->attributes),
+          'weight' => count($form_state['category']->attributes),
         );
         $form_state['category']->attributes[$name] = $attribute_object;
       }
       elseif ($attribute_object = properties_attribute_load($attribute['attribute'])) {
-        $attribute_object->weight = $attribute['_weight'];
+        $attribute_object->weight = count($form_state['category']->attributes);
         $form_state['category']->attributes[$attribute_object->name] = $attribute_object;
       }
       else {
         // Update empty attribute.
         $form_state['category']->attributes[$attribute['attribute']]->name = $attribute['attribute'];
         $form_state['category']->attributes[$attribute['attribute']]->label = isset($attribute['label']) ? $attribute['label'] : '';
-        $form_state['category']->attributes[$attribute['attribute']]->weight = $attribute['_weight'];
+        $form_state['category']->attributes[$attribute['attribute']]->weight = count($form_state['category']->attributes);
         $form_state['category']->attributes[$attribute['attribute']]->new = TRUE;
 
         // If label is empty, add validation error.
@@ -434,6 +438,7 @@ function properties_admin_add_more_submit($form, &$form_state) {
     'name' => '',
     'weight' => count($form_state['category']->attributes),
   );
+
   $form_state['rebuild'] = TRUE;
 }
 
