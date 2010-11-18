@@ -121,3 +121,15 @@ function properties_template_delete($template) {
   $function_name = _properties_get_call('template', 'delete');
   return $function_name($template);
 }
+
+/**
+ * Implements hook_theme().
+ */
+function properties_template_theme() {
+  return array(
+    'properties_template_admin_templates_categories_form' => array(
+      'render element' => 'element',
+      'file' => 'properties_template.admin.inc',
+    ),
+  );
+}

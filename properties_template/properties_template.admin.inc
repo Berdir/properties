@@ -128,7 +128,7 @@ function properties_template_admin_templates_form($form, &$form_state, $template
 
   $categories += array(
     '#type' => 'fieldset',
-    '#theme' => 'properties__template_admin_templates_categories_form',
+    '#theme' => 'properties_template_admin_templates_categories_form',
     '#title' => t('Categories'),
     '#description' => t('Configure the default categories of this template.'),
     '#prefix' => '<div id="attributes-wrapper">',
@@ -175,6 +175,7 @@ function properties_template_admin_templates_form($form, &$form_state, $template
   }
   return $form;
 }
+
 /**
  * Form builder; Valdate template form.
  */
@@ -294,4 +295,74 @@ function properties_template_admin_templates_delete($form, &$form_state, $templa
 function properties_template_admin_templates_delete_submit($form, &$form_state) {
   properties_template_delete($form_state['values']['template']);
   drupal_set_message(t('Template deleted.'));
+}
+
+/**
+ * Returns HTML for the categories table in the template table.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form element.
+ *
+ * @ingroup themeable
+ */
+function theme_properties_template_admin_templates_categories_form($variables) {
+  $element = $variables['element'];
+  $output = '';
+
+  $table_id = 'categories-values';
+  $order_class = 'categories-delta-order';
+  $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required.') . '">*</span>' : '';
+
+  $header = array(
+    array(
+      'data' => '<label>' . t('!title: !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>",
+      'colspan' => 2,
+      'class' => array('field-label'),
+    ),
+    t('Label'),
+    t('Order'),
+  );
+  $rows = array();
+
+  // Sort items according to '_weight' (needed when the form comes back after
+  // preview or failed validation)
+  $items = array();
+  foreach (element_children($element) as $key) {
+    if ($key === 'add_more') {
+      $add_more_button = &$element[$key];
+    }
+    else {
+      $items[] = &$element[$key];
+    }
+  }
+  uasort($items, '_field_sort_items_value_helper');
+
+  // Add the items as table rows.
+  foreach ($items as $key => $item) {
+    $item['_weight']['#categories']['class'] = array($order_class);
+    $delta_element = drupal_render($item['_weight']);
+
+    $label = drupal_render($item['label']);
+    $cells = array(
+      array('data' => '', 'class' => array('field-multiple-drag')),
+      array('data' => drupal_render($item), 'class' => array('properties-category-row-small')),
+      $label,
+      array('data' => $delta_element, 'class' => array('delta-order')),
+    );
+    $rows[] = array(
+      'data' => $cells,
+      'class' => array('draggable'),
+    );
+  }
+
+  $output = '<div class="form-item">';
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'categories' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
+  $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
+  $output .= '<div class="clearfix">' . drupal_render($add_more_button) . '</div>';
+  $output .= '</div>';
+
+  drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+
+  return $output;
 }
