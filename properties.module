@@ -342,20 +342,23 @@ function properties_empty_attribute() {
  */
 function properties_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $elements = array();
+  $field_name = $field['field_name'];
+  $values = isset($form_state['values'][$field_name][$langcode]['listing']) ? $form_state['values'][$field_name][$langcode]['listing'] : array();
 
   drupal_add_css(drupal_get_path('module', 'properties') . '/properties.css');
   drupal_add_js(drupal_get_path('module', 'properties') . '/properties.js');
 
-  if (empty($form_state[$field['field_name']])) {
-    $form_state[$field['field_name']]['categories'] = array();
+  $categories = &$form_state[$field_name]['categories'];
+  if (empty($form_state[$field_name]['categories'])) {
+    $categories = array();
     // Set up initial content.
     foreach ($items as $item) {
       // First, load the category if necessary.
-      if (empty($form_state[$field['field_name']]['categories'][$item['category']])) {
+      if (empty($categories[$item['category']])) {
         $category = properties_category_load($item['category']);
         if (!empty($category)) {
-          $form_state[$field['field_name']]['categories'][$category->name] = array(
-            '_weight' => count($form_state[$field['field_name']]['categories']),
+          $categories[$category->name] = array(
+            '_weight' => count($form_state[$field_name]['categories']),
             'category' => $category,
             'properties' => array(),
           );
@@ -367,33 +370,42 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       }
       $attribute = properties_attribute_load($item['attribute']);
       if (!empty($attribute)) {
-        $form_state[$field['field_name']]['categories'][$item['category']]['properties'][$attribute->name] = array(
+        $form_state[$field_name]['categories'][$item['category']]['properties'][$attribute->name] = array(
           'attribute' => $attribute->name,
           'category' => $item['category'],
           'value' => $item['value'],
-          '_weight' => count($form_state[$field['field_name']]['categories'][$item['category']]['properties']),
+          '_weight' => count($form_state[$field_name]['categories'][$item['category']]['properties']),
         );
       }
     }
   }
-  $categories = &$form_state[$field['field_name']]['categories'];
 
-  uasort($categories, '_field_sort_items_helper');
   $category_list = array();
-
   foreach ($categories as $category_name => $item) {
     $category_list[$item['category']->name] = $item['category']->label;
 
+    // Update weight from values.
+    if (isset($values[$category_name])) {
+      $item['_weight'] = $values[$category_name]['_weight'];
+    }
+
     // Move attributes to new category.
     foreach ($item['properties'] as $delta => $property) {
+      if (isset($values[$category_name]['properties'][$property['attribute']])) {
+        $property['_weight'] = $values[$category_name]['properties'][$property['attribute']]['_weight'];
+        $property['category'] = $values[$category_name]['properties'][$property['attribute']]['category'];
+      }
+
       if ($property['category'] != $category_name) {
         $categories[$property['category']]['properties'][$property['attribute']] = $property;
         unset($categories[$category_name]['properties'][$property['attribute']]);
       }
     }
+    usort($item['properties'], '_field_sort_items_helper');
   }
+  uasort($categories, '_field_sort_items_helper');
 
-  $id = 'properties-' . drupal_html_id($field['field_name']) . '-wrapper';
+  $id = 'properties-' . drupal_html_id($field_name) . '-wrapper';
 
   $elements['listing'] = array();
   $tabindex = 1;
@@ -422,7 +434,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       '#type' => 'submit',
       '#value' => t('Delete'),
       '#submit' => array('properties_widget_remove_category'),
-      '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+      '#limit_validation_errors' => array(array($field_name, $langcode)),
       '#name' => $category_name,
       '#ajax' => array(
         'callback' => 'properties_widget_update_js',
@@ -431,7 +443,6 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       ),
     );
 
-    usort($category['properties'], '_field_sort_items_helper');
     foreach ($category['properties'] as $delta => $property) {
       $element = array();
       $element['category'] = array(
@@ -481,7 +492,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#submit' => array('properties_widget_remove_attribute'),
         '#access' => user_access('add properties attributes'),
         '#name' => $property['attribute'],
-        '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+        '#limit_validation_errors' => array(array($field_name, $langcode)),
         '#ajax' => array(
           'callback' => 'properties_widget_update_js',
           'wrapper' => $id,
@@ -517,7 +528,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       '#type' => 'submit',
       '#value' => t('Add category'),
       '#attributes' => array('class' => array('field-add-more-submit')),
-      '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+      '#limit_validation_errors' => array(array($field_name, $langcode)),
       '#submit' => array('properties_widget_add_category_submit'),
       '#ajax' => array(
         'callback' => 'properties_widget_update_js',
@@ -544,7 +555,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       '#type' => 'submit',
       '#value' => t('Add attribute'),
       '#attributes' => array('class' => array('field-add-more-submit')),
-      '#limit_validation_errors' => array(array($field['field_name'], $langcode)),
+      '#limit_validation_errors' => array(array($field_name, $langcode)),
       '#submit' => array('properties_widget_add_attribute_submit'),
       '#ajax' => array(
         'callback' => 'properties_widget_update_js',
@@ -584,7 +595,7 @@ function properties_widget_add_category_submit($form, &$form_state) {
       unset($form_state['input'][$field_name][$langcode]['new_category']);
     }
     else {
-      form_set_error($field_name . '][' . $langcode . '][new_category', t('Category empty or invalid.'));
+      drupal_set_message(t('Category empty or invalid.'), 'error');
     }
   }
   $form_state['rebuild'] = TRUE;
@@ -610,7 +621,7 @@ function properties_widget_add_attribute_submit($form, &$form_state) {
     unset($form_state['input'][$field_name][$langcode]['new_attribute']);
   }
   else {
-    form_set_error($field_name . '][' . $langcode . '][new_attribute', t('Attribute empty or invalid.'));
+    drupal_set_message(t('Attribute empty or invalid.'), 'error');
   }
   $form_state['rebuild'] = TRUE;
 }
