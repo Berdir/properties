@@ -100,12 +100,12 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     // If name is given but label is empty, this means that this is a new
     // category. Display a textfield to enter a label.
     if (!empty($category->new)) {
-      $element['label'] = array(
+      /*$element['label'] = array(
         '#type' => 'textfield',
         '#default_value' => $category->label,
         '#maxlength' => 255,
         '#required' => TRUE,
-      );
+      );*/
     }
     else {
       $element['label'] = array(
@@ -210,7 +210,7 @@ function properties_template_admin_templates_form_validate($form, &$form_state) 
         if (empty($form_state['template']->categories[$category['category']]->label)) {
           // Not possible to do this as a proper form validation step because
           // the form is not rebuilt in case of validation errors.
-          drupal_set_message(t('Category %name does not exist, a label must be provided to create it.', array('%name' => $category['category'])), 'error');
+          drupal_set_message(t('Category %name does not exist, create a category before adding it to the template.', array('%name' => $category['category'])), 'error');
           $form_state['rebuild'] = TRUE;
         }
       }
