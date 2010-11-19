@@ -36,6 +36,10 @@ function properties_compare_page() {
       if ($field_info['type'] == 'properties') {
         // Load content for the configured language.
         $field_all_languages = $item['entity']->$field_name;
+        // Field is empty.
+        if (empty($field_all_languages)) {
+          continue;
+        }
         $field_content = $field_all_languages[$languages[$field_name]];
 
         // Loop over content of that field.

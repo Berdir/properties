@@ -24,7 +24,9 @@ function properties_admin_categories_list() {
       implode(' ', $links),
     );
   }
-  return theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No categories found.')));
+  $content = theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No categories found.')));
+  $content .= theme('pager');
+  return $content;
 }
 
 /**
@@ -46,7 +48,9 @@ function properties_admin_attributes_list() {
     );
   }
 
-  return theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No attributes found.')));
+  $content = theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No attributes found.')));
+  $content .= theme('pager');
+  return $content;
 }
 
 /**
