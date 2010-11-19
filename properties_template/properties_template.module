@@ -3,6 +3,22 @@
 // $Id$
 
 /**
+ * Implements hook_permission().
+ */
+function properties_template_permission() {
+  return array(
+    'administer properties templates' => array(
+      'title' => t('Administer templates'),
+      'description' => t('Allows to create new, edit existing and delete templates.'),
+    ),
+    'add properties templates' => array(
+      'title' => t('Add templates to content'),
+      'description' => t('Allows to add an existing template to content.'),
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function properties_template_menu() {

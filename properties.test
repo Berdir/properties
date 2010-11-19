@@ -68,7 +68,11 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
    * Implements setUp().
    */
   function setUp() {
-    parent::setUp('properties', 'properties_sql');
+    $args = func_get_args();
+    if (empty($args)) {
+      $args = array('properties', 'properties_sql');
+    }
+    parent::setUp($args);
     $this->admin = NULL;
     $this->editor = NULL;
   }
@@ -210,7 +214,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
  */
 class PropertiesTestCase extends PropertiesBaseTestCase {
   /**
-   * Implementats getInfo().
+   * Implements getInfo().
    */
   public static function getInfo() {
     return array(
