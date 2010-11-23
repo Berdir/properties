@@ -152,3 +152,68 @@ function properties_template_theme() {
     ),
   );
 }
+
+/**
+ * Implements hook_field_attach_form().
+ */
+function properties_template_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  // Load fields attached to the entity.
+  $fields = field_info_instances($form['#entity_type'], $form['#bundle']);
+
+  // Loop over fields.
+  foreach ($fields as $field_name => $field) {
+    $field_info = field_info_field_by_id($field['field_id']);
+    if ($field_info['type'] == 'properties' && isset($form_state[$field_name])) {
+      // Display template selection only when there are no properties.
+      if (empty($form_state[$field_name]['categories'])) {
+
+        // Prepare options for select.
+        $templates = array(t('Choose template...'));
+        foreach (properties_template_load_paging(100) as $template) {
+          $templates[$template->name] = $template->label;
+        }
+
+        $element['template'] = array(
+          '#type' => 'select',
+          '#title' => t('Select template'),
+          '#title_display' => 'invisible',
+          '#options' => $templates,
+        );
+
+        $id = 'properties-' . drupal_html_id($field_name) . '-wrapper';
+        $element['select_template'] = array(
+          '#type' => 'submit',
+          '#value' => t('Select template'),
+          '#limit_validation_errors' => array(array($field_name, $langcode)),
+          '#submit' => array('properties_template_submit_select_template'),
+          '#ajax' => array(
+            'callback' => 'properties_widget_update_js',
+            'wrapper' => $form[$field_name][$langcode]['#properties_table_id'],
+            'effect' => 'fade',
+          ),
+        );
+
+        $form[$field_name][$langcode]['actions']['template'] = $element;
+      }
+    }
+  }
+}
+
+/**
+ * Submit callback to add categories of a template to the form.
+ */
+function properties_template_submit_select_template($form, &$form_state) {
+  $field_name = $form_state['triggering_element']['#parents'][0];
+  $langcode = $form[$field_name]['#language'];
+  $values = $form_state['values'][$field_name][$langcode]['actions']['template'];
+
+  // Load categories of template and add them to the form.
+  if (!empty($values['template'])) {
+    $template = properties_template_load($values['template']);
+    foreach (properties_category_load_multiple(array_keys($template->categories)) as $category) {
+      properties_widget_add_category($category, $form_state, $field_name, $langcode);
+    }
+  }
+
+  $form_state['rebuild'] = TRUE;
+}

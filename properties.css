@@ -6,8 +6,8 @@ div.inline div.form-item {
     padding: 10px;
 }
 
-form#properties-admin-attributes-list input#edit-submit {
-    margin-top: 5px;
+form#properties-admin-attributes-list input.form-submit, div.field-widget-properties-table input.form-submit {
+    margin-top: 7px;
     float: left;
 }
 
