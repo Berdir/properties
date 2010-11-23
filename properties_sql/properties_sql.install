@@ -28,7 +28,8 @@ function properties_sql_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
+        'translatable' => TRUE,
       ),
     ),
     'primary key'     => array('name'),
@@ -50,7 +51,8 @@ function properties_sql_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
+        'translatable' => TRUE,
       ),
     ),
     'primary key'     => array('name'),
@@ -112,7 +114,8 @@ function properties_sql_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => ''
+        'default' => '',
+        'translatable' => TRUE,
       ),
     ),
     'primary key'     => array('name'),

@@ -25,8 +25,8 @@ function properties_sql_properties_attribute_save($attribute) {
  */
 function properties_sql_properties_attribute_delete($attribute) {
   $num_deleted = db_delete('properties_attribute')
-  ->condition('name', $attribute->name)
-  ->execute();
+    ->condition('name', $attribute->name)
+    ->execute();
 }
 
 /**
@@ -46,8 +46,13 @@ function properties_sql_properties_attribute_load($name) {
  *   Array of machine readable name of the attributes.
  */
 function properties_sql_properties_attribute_load_multiple($names = array()) {
-  $result = db_query("SELECT * FROM {properties_attribute} WHERE name in (:names)", array(':names' => $names));
-  return $result->fetchAllAssoc('name');
+  return db_select('properties_attribute', 'pa')
+    ->fields('pa')
+    ->condition('name', $names)
+    ->addTag('translatable')
+    ->addTag('properties_attribute_load')
+    ->execute()
+    ->fetchAllAssoc('name');
 }
 
 /**
@@ -136,12 +141,27 @@ function properties_sql_properties_category_load($name) {
  *   Array of machine readable name of the categories.
  */
 function properties_sql_properties_category_load_multiple($names = array()) {
-  $result = db_query("SELECT * FROM {properties_category} WHERE name in (:categories)", array(':categories' => $names));
-  $categories = $result->fetchAllAssoc('name');
+  $categories = db_select('properties_category', 'pc')
+    ->fields('pc')
+    ->condition('name', $names)
+    ->addTag('translatable')
+    ->addTag('properties_category_load')
+    ->execute()
+    ->fetchAllAssoc('name');
+
   foreach ($categories as $category) {
     $category->attributes = array();
   }
-  $result = db_query("SELECT * FROM {properties_category_attribute} pac INNER JOIN {properties_attribute} pa ON pac.attribute_name = pa.name WHERE category_name in (:categories) ORDER BY pac.weight", array(':categories' => $names));
+
+  $query = db_select('properties_category_attribute', 'pca')
+    ->fields('pca')
+    ->condition('pca.category_name', $names)
+    ->addTag('properties_category_attribute_load')
+    ->orderBy('pca.weight');
+  $query->join('properties_attribute', 'pa', 'pca.attribute_name = pa.name');
+  $result = $query
+    ->fields('pa')
+    ->execute();
   foreach ($result as $attribute) {
     $categories[$attribute->category_name]->attributes[$attribute->name] = $attribute;
   }
@@ -239,14 +259,29 @@ function properties_sql_properties_template_load($name) {
  *   Array of machine readable name of the templates.
  */
 function properties_sql_properties_template_load_multiple($names = array()) {
-  $result = db_query("SELECT * FROM {properties_template} WHERE name in (:templates)", array(':templates' => $names));
-  $templates = $result->fetchAllAssoc('name');
+  $templates = db_select('properties_template', 'pt')
+    ->fields('pt')
+    ->condition('name', $names)
+    ->addTag('translatable')
+    ->addTag('properties_template_load')
+    ->execute()
+    ->fetchAllAssoc('name');
+
   foreach ($templates as $template) {
     $template->attributes = array();
   }
-  $result = db_query("SELECT * FROM {properties_template_category} ptc INNER JOIN {properties_category} pc ON ptc.category_name = pc.name WHERE template_name in (:templates) ORDER BY ptc.weight", array(':templates' => $names));
-  foreach ($result as $category) {
-    $templates[$category->template_name]->categories[$category->name] = $category;
+
+  $query = db_select('properties_template_category', 'ptc')
+    ->fields('ptc')
+    ->condition('ptc.template_name', $names)
+    ->addTag('properties_template_category_load')
+    ->orderBy('ptc.weight');
+  $query->join('properties_category', 'pc', 'ptc.category_name = pc.name');
+  $result = $query
+    ->fields('pa')
+    ->execute();
+  foreach ($result as $attribute) {
+    $templates[$attribute->category_name]->attributes[$attribute->name] = $attribute;
   }
   return $templates;
 }
