@@ -10,9 +10,20 @@
  * Menu callback; Display a list of categories.
  */
 function properties_admin_categories_list() {
-  $categories = properties_category_load_paging(20);
-
-  $header = array(t('Name'), t('Label'), t('Operations'));
+  
+  $header = array(
+    array(
+      'data' => t('Name'),
+      'field' => 'name',
+    ),
+    array(
+      'data' => t('Label'),
+      'field' => 'label',
+      'sort' => 'asc',
+    ),
+    t('Operations'),
+  );
+  $categories = properties_category_load_paging(20, array('header' => $header));
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($categories as $category) {
@@ -33,9 +44,20 @@ function properties_admin_categories_list() {
  * Menu callback; Display a list of attributes.
  */
 function properties_admin_attributes_list() {
-  $attributes = properties_attribute_load_paging(20);
+  $header = array(
+    array(
+      'data' => t('Name'),
+      'field' => 'name',
+    ),
+    array(
+      'data' => t('Label'),
+      'field' => 'label',
+      'sort' => 'asc',
+    ),
+    t('Operations'),
+  );
 
-  $header = array(t('Name'), t('Label'), t('Operations'));
+  $attributes = properties_attribute_load_paging(20, array('header' => $header));
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($attributes as $attribute) {

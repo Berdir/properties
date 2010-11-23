@@ -81,6 +81,9 @@ function properties_template_menu() {
  *   Template name.
  */
 function properties_template_load($name) {
+  if (empty($name)) {
+    return FALSE;
+  }
   $function_name = _properties_get_call('template', 'load');
   return $function_name($name);
 }

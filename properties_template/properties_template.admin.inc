@@ -10,9 +10,19 @@
  * Menu callback; Display a list of templates
  */
 function properties_template_admin_templates_list() {
-  $templates = properties_template_load_paging(20);
-
-  $header = array(t('Name'), t('Label'), t('Operations'));
+  $header = array(
+    array(
+      'data' => t('Name'),
+      'field' => 'name',
+    ),
+    array(
+      'data' => t('Label'),
+      'field' => 'label',
+      'sort' => 'asc',
+    ),
+    t('Operations'),
+  );
+  $templates = properties_template_load_paging(20, array('header' => $header));
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($templates as $template) {

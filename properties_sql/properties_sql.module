@@ -66,6 +66,12 @@ function properties_sql_properties_attribute_load_paging($per_page, array $optio
     ->fields('pa')
     ->limit($per_page);
 
+  if (isset($options['header'])) {
+    $query = $query
+      ->extend('TableSort')
+      ->orderByHeader($options['header']);
+  }
+
   if (!empty($options['search'])) {
     $query->condition(db_or()
       ->condition('name', $options['search'] . '%', 'LIKE')
@@ -179,6 +185,12 @@ function properties_sql_properties_category_load_paging($per_page, array $option
     ->fields('pc')
     ->limit($per_page);
 
+  if (isset($options['header'])) {
+    $query = $query
+      ->extend('TableSort')
+      ->orderByHeader($options['header']);
+  }
+
   if (!empty($options['search'])) {
     $query->condition(db_or()
       ->condition('name', $options['search'] . '%', 'LIKE')
@@ -278,7 +290,7 @@ function properties_sql_properties_template_load_multiple($names = array()) {
     ->orderBy('ptc.weight');
   $query->join('properties_category', 'pc', 'ptc.category_name = pc.name');
   $result = $query
-    ->fields('pa')
+    ->fields('pc')
     ->execute();
   foreach ($result as $attribute) {
     $templates[$attribute->category_name]->attributes[$attribute->name] = $attribute;
@@ -288,6 +300,7 @@ function properties_sql_properties_template_load_multiple($names = array()) {
 
 /**
  * Load a paged amount of templates.
+ *
  * @param $per_page
  *   Number of templates per page.
  */
@@ -296,6 +309,11 @@ function properties_sql_properties_template_load_paging($per_page, array $option
     ->fields('pt')
     ->limit($per_page);
 
+  if (isset($options['header'])) {
+    $query = $query
+      ->extend('TableSort')
+      ->orderByHeader($options['header']);
+  }
   if (!empty($options['search'])) {
     $query->condition(db_or()
       ->condition('name', $options['search'] . '%', 'LIKE')
