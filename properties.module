@@ -34,7 +34,8 @@ function properties_menu() {
     'title' => 'Properties',
     'description' => 'Administer categories and attributes',
     'access callback' => 'properties_admin_access',
-    'page callback' => 'properties_admin_attributes_list',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_attributes_list'),
     'file' => 'properties.admin.inc',
   );
 

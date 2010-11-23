@@ -10,7 +10,6 @@
  * Menu callback; Display a list of categories.
  */
 function properties_admin_categories_list() {
-  
   $header = array(
     array(
       'data' => t('Name'),
@@ -35,15 +34,20 @@ function properties_admin_categories_list() {
       implode(' ', $links),
     );
   }
-  $content = theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No categories found.')));
-  $content .= theme('pager');
+  $content['table'] = array(
+    '#type' => 'table',
+    '#rows' => $rows,
+    '#header' => $header,
+    '#empty' => t('No categories found.'),
+  );
+  $content['pager']['#markup'] = theme('pager');
   return $content;
 }
 
 /**
  * Menu callback; Display a list of attributes.
  */
-function properties_admin_attributes_list() {
+function properties_admin_attributes_list($form, $form_state) {
   $header = array(
     array(
       'data' => t('Name'),
@@ -57,7 +61,12 @@ function properties_admin_attributes_list() {
     t('Operations'),
   );
 
-  $attributes = properties_attribute_load_paging(20, array('header' => $header));
+  $options = array('header' => $header);
+  if (!empty($form_state['values']['search'])) {
+    $options['search'] = $form_state['values']['search'];
+  }
+
+  $attributes = properties_attribute_load_paging(20, $options);
   $rows = array();
   $url_options = array('query' => drupal_get_destination());
   foreach ($attributes as $attribute) {
@@ -70,9 +79,71 @@ function properties_admin_attributes_list() {
     );
   }
 
-  $content = theme('table', array('rows' => $rows, 'header' => $header, 'empty' => t('No attributes found.')));
-  $content .= theme('pager');
-  return $content;
+  drupal_add_css(drupal_get_path('module', 'properties') . '/properties.css');
+
+  $form['filter'] = array(
+    '#prefix' => '<div class="clearfix">',
+    '#suffix' => '</div>',
+  );
+
+  $form['filter']['search'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search'),
+    '#title_display' => 'invisible',
+    '#size' => 20,
+    '#ajax' => array(
+      'callback' => 'properties_admin_attributes_list_js',
+      'wrapper' => 'attributes-list',
+      'effect' => 'fade',
+      'event' => 'blur',
+    ),
+  );
+
+  $form['filter']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+
+  $form['filter']['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset'),
+    '#submit' => array('properties_admin_attributes_list_submit_reset'),
+  );
+
+  $form['content'] = array(
+    '#prefix' => '<div id="attributes-list">',
+    '#suffix' => '</div>',
+  );
+
+  $form['content']['table'] = array(
+    '#theme' => 'table',
+    '#rows' => $rows,
+    '#header' => $header,
+    '#empty' => t('No attributes found.'),
+  );
+  $form['content']['pager']['#markup'] = theme('pager');
+  return $form;
+}
+
+/**
+ * Submit callback, rebuilds the form.
+ */
+function properties_admin_attributes_list_submit($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Rset callback, does not rebuild the form.
+ */
+function properties_admin_attributes_list_submit_reset($form, &$form_state) {
+  
+}
+
+/**
+ * Ajax callback function to return the updated table.
+ */
+function properties_admin_attributes_list_js($form, $form_state) {
+  return $form['content'];
 }
 
 /**
