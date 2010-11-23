@@ -12,8 +12,8 @@ function properties_template_permission() {
       'description' => t('Allows to create new, edit existing and delete templates.'),
     ),
     'add properties templates' => array(
-      'title' => t('Add templates to content'),
-      'description' => t('Allows to add an existing template to content.'),
+      'title' => t('Choose a template for a property field'),
+      'description' => t('Allows to choose a template when creating content with attached properties.'),
     ),
   );
 }
