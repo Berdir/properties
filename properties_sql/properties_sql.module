@@ -280,7 +280,7 @@ function properties_sql_properties_template_load_multiple($names = array()) {
     ->fetchAllAssoc('name');
 
   foreach ($templates as $template) {
-    $template->attributes = array();
+    $template->categories = array();
   }
 
   $query = db_select('properties_template_category', 'ptc')
@@ -292,8 +292,8 @@ function properties_sql_properties_template_load_multiple($names = array()) {
   $result = $query
     ->fields('pc')
     ->execute();
-  foreach ($result as $attribute) {
-    $templates[$attribute->category_name]->attributes[$attribute->name] = $attribute;
+  foreach ($result as $category) {
+    $templates[$category->template_name]->categories[$category->name] = $category;
   }
   return $templates;
 }
