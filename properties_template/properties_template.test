@@ -1,0 +1,103 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Contains tests for the properties_template.module
+ */
+
+/**
+ * Base class for properties tests, provides helper methods.
+ */
+class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    parent::setUp('properties', 'properties_sql','properties_template');
+    $this->admin = NULL;
+    $this->editor = NULL;
+  }
+
+  /**
+   * Log in with administrative permissions.
+   *
+   * Admin user is created on-demand.
+   */
+  protected function loginAdmin() {
+    if (empty($this->admin)) {
+      $this->admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content', 'edit any page content', 'administer properties attributes', 'administer properties categories', 'add properties attributes', 'add properties categories','administer properties templates','add properties templates'));
+    }
+    $this->drupalLogin($this->admin);
+  }
+}
+
+/**
+ * Tests for fields integration.
+ */
+class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => t('Templates creation'),
+      'description' => t('Tests the creation of a template.'),
+      'group' => t('Properties'),
+    );
+  }
+
+  public function testCreating() {
+    $this->loginAdmin();
+
+    // Create the categories first
+    $attributes = array();
+    for ($i = 0; $i < 3; $i++) {
+      $attributes[$i] = $this->createAttribute();
+    }
+    // Create category with these existing attributes.
+    $category1 = $this->createCategory(drupal_strtolower($this->randomName(8)), $this->randomName(20), $attributes);
+
+    $attributes = array();
+    for ($i = 0; $i < 4; $i++) {
+      $attributes[$i] = $this->createAttribute();
+    }
+    // Create category with these existing attributes.
+    $category2 = $this->createCategory(drupal_strtolower($this->randomName(8)), $this->randomName(20), $attributes);
+
+    $template_name = drupal_strtolower($this->randomName(8));
+    $template_label = $this->randomName(20);
+    // Add category1
+    $template_form = array(
+      'name' => $template_name,
+      'label' => $template_label,
+      'categories[0][category]' => $category1->name,
+    );
+    $this->drupalPost('admin/config/content/properties/templates/add', $template_form, t('Add another category'));
+
+    // check if the label of the added category1 occurs
+    $this->assertText($category1->label);
+
+    // add category2
+    $template_form = array(
+      'categories[1][category]' => $category2->name,
+    );
+
+    $this->drupalPost(NULL, $template_form, t('Add another category'));
+
+    // check if the label of the added category2 occurs
+    $this->assertText($category2->label);
+
+    // Click add
+    $this->drupalPost(NULL, NULL, t('Add'));
+
+    // look if the new generated template occurs in the list
+    $this->drupalGet('admin/config/content/properties/templates');
+    $this->assertText($template_name);
+    $this->assertText($template_label);
+
+    // look if the template was stored in the db
+    $template_object = properties_template_load($template_name);
+    $this->assertEqual($template_object->label, $template_label);
+  }
+}
