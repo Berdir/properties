@@ -35,7 +35,7 @@ function properties_admin_categories_list() {
     );
   }
   $content['table'] = array(
-    '#type' => 'table',
+    '#theme' => 'table',
     '#rows' => $rows,
     '#header' => $header,
     '#empty' => t('No categories found.'),

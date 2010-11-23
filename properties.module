@@ -41,7 +41,8 @@ function properties_menu() {
 
   $items['admin/config/content/properties/attributes'] = array(
     'title' => 'Attributes',
-    'page callback' => 'properties_admin_attributes_list',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('properties_admin_attributes_list'),
     'file' => 'properties.admin.inc',
     'access callback' => 'properties_admin_access',
     'access arguments' => array('attributes'),
