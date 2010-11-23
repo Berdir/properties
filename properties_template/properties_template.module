@@ -157,6 +157,12 @@ function properties_template_theme() {
  * Implements hook_field_attach_form().
  */
 function properties_template_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+
+  // Bail out if permissions are missing.
+  if (!user_access('add properties templates')) {
+    return;
+  }
+
   // Load fields attached to the entity.
   $fields = field_info_instances($form['#entity_type'], $form['#bundle']);
 
