@@ -431,6 +431,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       '#title' => t('Weight for category @category', array('@category' => $category['category']->label)),
       '#title_display' => 'invisible',
       '#default_value' => $category['_weight'],
+      '#access' => user_access('add properties categories'),
       '#weight' => 100,
     );
 
@@ -439,6 +440,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
       '#value' => t('Delete'),
       '#submit' => array('properties_widget_remove_category'),
       '#limit_validation_errors' => array(array($field_name, $langcode)),
+      '#access' => user_access('add properties categories'),
       '#name' => $category_name,
       '#ajax' => array(
         'callback' => 'properties_widget_update_js',

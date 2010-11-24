@@ -19,13 +19,16 @@ else {
   $header = array(
     t('Attribute'),
     t('Value'),
-    t('Order'),
   );
+  if (user_access('add properties categories')) {
+    $header[] = t('Order');
+  }
 }
 $rows = array();
-
-drupal_add_tabledrag($table_id, 'match', 'parent', 'property-category-select', 'property-category-select', 'category-name');
-drupal_add_tabledrag($table_id, 'order', 'sibling', 'property-weight');
+if (user_access('add properties attributes') || user_access('add properties categories')) {
+  drupal_add_tabledrag($table_id, 'match', 'parent', 'property-category-select', 'property-category-select', 'category-name');
+  drupal_add_tabledrag($table_id, 'order', 'sibling', 'property-weight');
+}
 
 foreach (element_children($element['listing']) as $category_name) {
   $category = $element['listing'][$category_name];
@@ -40,8 +43,10 @@ foreach (element_children($element['listing']) as $category_name) {
     $cells[] = '&nbsp;';
     $cells[] = '&nbsp;';
   }
-  $cells[] = drupal_render($category['category']) . drupal_render($category['name']) . drupal_render($category['_weight']);
-  $cells[] = drupal_render($category['delete']);
+  if (user_access('add properties categories')) {
+    $cells[] = drupal_render($category['category']) . drupal_render($category['name']) . drupal_render($category['_weight']);
+    $cells[] = drupal_render($category['delete']);
+  }
   $rows[] = array(
     'data' => $cells,
     'class' => array('draggable', 'tabledrag-root'),
@@ -69,7 +74,7 @@ foreach (element_children($element['listing']) as $category_name) {
       $cells[] = drupal_render($property['_weight']);
       $cells[] = drupal_render($property['delete']);
     }
-    else {
+    elseif (user_access('add properties categories')) {
       $cells[] = '&nbsp;';
     }
     $rows[] = array(
