@@ -44,6 +44,9 @@ function properties_generate_form() {
   return $form;
 }
 
+/**
+ * Submit callback for generating properties.
+ */
 function properties_generate_form_submit($form, &$form_state) {
   module_load_include('inc', 'devel_generate');
   properties_generate_generate($form_state['values']['num_categories'], $form_state['values']['num_attributes'], $form_state['values']['kill']);
@@ -86,4 +89,3 @@ function properties_generate_generate($num_categories = 20, $num_attributes = 10
     properties_category_save($category);
   }
 }
-
