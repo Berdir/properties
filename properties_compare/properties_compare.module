@@ -107,7 +107,7 @@ function properties_compare_add_form($form, &$form_state, $entity_type, $entity)
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Compare'),
+    '#value' => t('Add to compare list'),
   );
   return $form;
 }
@@ -188,7 +188,8 @@ function properties_compare_block_info() {
  */
 function properties_compare_block_view($delta = '') {
   if ($delta == 'compare_list') {
-    if ($list = properties_compare_list()) {
+    // Do not display the block on the properties/compare page.
+    if (($list = properties_compare_list()) && $_GET['q'] != 'properties/compare') {
       return array(
         'subject' => t('Compare list'),
         'content' => drupal_get_form('properties_compare_list_form', $list),
