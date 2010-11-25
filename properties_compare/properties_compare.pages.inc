@@ -20,13 +20,17 @@ function properties_compare_page() {
 
   $categories = array();
   $attributes = array();
+  $entities = array();
   // First, loop over compare items to collect categories and attributes.
   foreach ($list as $item) {
+    $entity = reset(entity_load($item['entity_type'], array($item['entity_id'])));
+    $entities[properties_compare_create_key($item['entity_type'], $entity)] = $entity;
+
     // Load fields attached to the entity.
-    $fields = field_info_instances($item['entity_type'], field_extract_bundle($item['entity_type'], $item['entity']));
+    $fields = field_info_instances($item['entity_type'], field_extract_bundle($item['entity_type'], $entity));
 
     // Get the display language for the entity.
-    $languages = field_language($item['entity_type'], $item['entity']);
+    $languages = field_language($item['entity_type'], $entity);
 
     // Loop over fields.
     foreach ($fields as $field_name => $field) {
@@ -35,7 +39,7 @@ function properties_compare_page() {
       // Only handle properties fields.
       if ($field_info['type'] == 'properties') {
         // Load content for the configured language.
-        $field_all_languages = $item['entity']->$field_name;
+        $field_all_languages = $entity->$field_name;
         // Field is empty.
         if (empty($field_all_languages)) {
           continue;
@@ -44,7 +48,7 @@ function properties_compare_page() {
 
         // Loop over content of that field.
         foreach ($field_content as $property) {
-          $id = properties_compare_create_key($item['entity_type'], $item['entity']);
+          $id = properties_compare_create_key($item['entity_type'], $entity);
 
           // Collect number of entities that have a given category.
           $categories[$property['category']][$id] = TRUE;
@@ -66,7 +70,8 @@ function properties_compare_page() {
   // Collect header.
   $header = array(t('Attributes'));
   foreach ($list as $item) {
-    $header[] = entity_label($item['entity_type'], $item['entity']);
+    $entity = $entities[$item['entity_type'] . '_' . $item['entity_id']];
+    $header[] = entity_label($item['entity_type'], $entity);
   }
 
   // Collect rows.
@@ -90,7 +95,8 @@ function properties_compare_page() {
       $row = array(array('data' => $loaded_attributes[$attribute_name]->label));
       // Loop over entites in list.
       foreach ($list as $item) {
-        $id = properties_compare_create_key($item['entity_type'], $item['entity']);
+        $entity = $entities[$item['entity_type'] . '_' . $item['entity_id']];
+        $id = properties_compare_create_key($item['entity_type'], $entity);
         // Check if this entity has a value for this attribute. If yes, display
         // the value, if not, display as an empty cell.
         if (isset($field_values[$id])) {

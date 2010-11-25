@@ -36,11 +36,9 @@ function properties_compare_menu() {
  * Implements hook_entity_view().
  */
 function properties_compare_entity_view($entity, $type, $view_mode, $langcode) {
-
   if (!user_access('compare properties')) {
     return;
   }
-
 
   $extra_fields = field_extra_fields_get_display($type, field_extract_bundle($type, $entity), $view_mode);
   // Verify if button should be displayed for this view mode.
@@ -151,9 +149,10 @@ function &properties_compare_list() {
  */
 function properties_compare_list_add($entity_type, $entity) {
   $list = &properties_compare_list();
+  list($id, , ) = entity_extract_ids($entity_type, $entity);
   $list[properties_compare_create_key($entity_type, $entity)] = array(
     'entity_type' => $entity_type,
-    'entity' => $entity,
+    'entity_id' => $id,
   );
 }
 
@@ -204,7 +203,8 @@ function properties_compare_block_view($delta = '') {
 function properties_compare_list_form($form, &$form_state, $list) {
   $items = array();
   foreach ($list as $compare_item) {
-    $items[] = entity_label($compare_item['entity_type'], $compare_item['entity']);
+    $entity = reset(entity_load($compare_item['entity_type'], array($compare_item['entity_id'])));
+    $items[] = entity_label($compare_item['entity_type'], $entity);
   }
 
   $form['items'] = array(
