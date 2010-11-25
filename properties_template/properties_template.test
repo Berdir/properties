@@ -14,7 +14,7 @@ class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
    * Implements setUp().
    */
   function setUp() {
-    parent::setUp('properties', 'properties_sql','properties_template');
+    parent::setUp('properties', 'properties_sql', 'properties_template');
     $this->admin = NULL;
     $this->editor = NULL;
   }
@@ -26,7 +26,7 @@ class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
    */
   protected function loginAdmin() {
     if (empty($this->admin)) {
-      $this->admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content', 'edit any page content', 'administer properties attributes', 'administer properties categories', 'add properties attributes', 'add properties categories','administer properties templates','add properties templates'));
+      $this->admin = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'create page content', 'edit any page content', 'administer properties attributes', 'administer properties categories', 'add properties attributes', 'add properties categories', 'administer properties templates', 'add properties templates'));
     }
     $this->drupalLogin($this->admin);
   }

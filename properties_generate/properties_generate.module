@@ -68,7 +68,7 @@ function properties_generate_generate($num_categories = 20, $num_attributes = 10
     }
   }
 
-  for($i = 0; $i < $num_categories; $i++) {
+  for ($i = 0; $i < $num_categories; $i++) {
     $category = (object)array(
       'name' => drupal_strtolower(devel_generate_word(6)),
       'label' => devel_generate_word(10),

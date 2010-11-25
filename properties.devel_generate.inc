@@ -1,4 +1,10 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Contains devel_generate hook implementation to fill properties fields.
+ */
 
 /**
  * Implements hook_devel_generate().
