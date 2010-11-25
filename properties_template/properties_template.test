@@ -21,8 +21,6 @@ class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
    */
   function setUp() {
     parent::setUp('properties', 'properties_sql', 'properties_template');
-    $this->admin = NULL;
-    $this->editor = NULL;
     $this->templateUser = NULL;
   }
 
