@@ -110,21 +110,9 @@ function properties_template_admin_templates_form($form, &$form_state, $template
     );
     // TODO: add categories-wrapper
 
-    // If name is given but label is empty, this means that this is a new
-    // category. Display a textfield to enter a label.
-    if (!empty($category->new)) {
-      /*$element['label'] = array(
-        '#type' => 'textfield',
-        '#default_value' => $category->label,
-        '#maxlength' => 255,
-        '#required' => TRUE,
-      );*/
-    }
-    else {
-      $element['label'] = array(
-        '#markup' => $category->label,
-      );
-    }
+    $element['label'] = array(
+      '#markup' => $category->label,
+    );
     // We name the element '_weight' to avoid clashing with elements
     // defined by widget.
     $element['_weight'] = array(
