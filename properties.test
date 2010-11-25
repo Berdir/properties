@@ -283,8 +283,6 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
 
     // Make sure that the moved attribute is shown in the correct category.
     // Meaning, after the last attribute in that category.
-    // @todo: Test does not work yet.
-    debug('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s');
     $this->assertPattern('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s', t('Moved attribute is shown in the correct place.'));
 
     // Make sure the default order in category 2 is correct.
