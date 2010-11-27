@@ -47,6 +47,10 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
     );
   }
 
+  /**
+   * Creates two different categories, adds them to a template
+   * and checks if the data is correctly displayed and stored.
+   */
   public function testCreating() {
     $this->loginAdmin();
 
