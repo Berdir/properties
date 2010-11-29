@@ -157,7 +157,6 @@ function properties_template_theme() {
  * Implements hook_field_attach_form().
  */
 function properties_template_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
-
   // Bail out if permissions are missing.
   if (!user_access('add properties templates')) {
     return;
@@ -168,6 +167,12 @@ function properties_template_field_attach_form($entity_type, $entity, &$form, &$
 
   // Loop over fields.
   foreach ($fields as $field_name => $field) {
+
+    // If langcode is empty, get default.
+    if (empty($langcode)) {
+      $langcode = field_language($entity_type, $entity, $field_name);
+    }
+
     $field_info = field_info_field_by_id($field['field_id']);
     if ($field_info['type'] == 'properties' && isset($form_state[$field_name])) {
       // Display template selection only when there are no properties.

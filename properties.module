@@ -269,6 +269,9 @@ function properties_field_presave($entity_type, $entity, $field, $instance, $lan
     // Next step, order categories and attributes.
     uasort($categories, '_field_sort_items_helper');
     foreach ($categories as $category) {
+      if (empty($category['properties'])) {
+        continue;
+      }
       uasort($category['properties'], '_field_sort_items_helper');
       foreach ($category['properties'] as $property) {
         // Add them in the sorted order to the items array.
