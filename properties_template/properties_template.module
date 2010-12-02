@@ -198,8 +198,7 @@ function properties_template_field_attach_form($entity_type, $entity, &$form, &$
             'effect' => 'fade',
           ),
         );
-
-        $form[$field_name][$langcode]['actions']['template'] = $element;
+        $form[$field_name][$langcode]['actions'] += $element;
       }
     }
   }
@@ -211,7 +210,7 @@ function properties_template_field_attach_form($entity_type, $entity, &$form, &$
 function properties_template_submit_select_template($form, &$form_state) {
   $field_name = $form_state['triggering_element']['#parents'][0];
   $langcode = $form[$field_name]['#language'];
-  $values = $form_state['values'][$field_name][$langcode]['actions']['template'];
+  $values = $form_state['values'][$field_name][$langcode]['actions'];
 
   // Load categories of template and add them to the form.
   if (!empty($values['template'])) {

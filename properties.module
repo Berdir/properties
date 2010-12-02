@@ -477,6 +477,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         '#type' => 'textfield',
         '#default_value' =>  $property['value'],
         '#maxlength' => 255,
+        '#size' => 32,
         '#attributes' => array(
           'tabindex' => $tabindex,
           'class' => array('properties-value'),
@@ -520,6 +521,8 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#prefix' => '<div id="' . $id . '">',
     '#suffix' => '</div>',
     '#max_delta' => $delta,
+    // Container for action form elements, might be empty.
+    'actions' => array(),
   );
 
   if (user_access('add properties categories')) {

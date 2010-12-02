@@ -207,6 +207,54 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
   function getAttributeFormName($category, $attribute, $fieldname = 'value') {
     return $this->field_prefix . '[listing][' . $category->name . '][properties][' . $attribute->name . '][' . $fieldname . ']';
   }
+
+  /**
+   * Create a page node with properties attached to it.
+   *
+   * @param $path
+   *   Path the the create form, defaults to node/add/page.
+   * @param $save
+   *   Name
+   */
+  function createEntity($path = 'node/add/page', $save = NULL, $entity = 'node') {
+    // Add first category.
+    $node = array(
+      'title' => $this->randomName(),
+      $this->field_prefix . '[actions][new_category]' => $this->categories[0]->name,
+    );
+
+    $this->drupalPost('node/add/page', $node, t('Add category'));
+
+    // Next category.
+    $category = array(
+      $this->field_prefix . '[actions][new_category]' => $this->categories[1]->name,
+    );
+    $this->drupalPost(NULL, $category, t('Add category'));
+
+    // Last category.
+    $category = array(
+      $this->field_prefix . '[actions][new_category]' => $this->categories[2]->name,
+    );
+    $this->drupalPost(NULL, $category, t('Add category'));
+
+    // Fill in values.
+    $edit = array();
+    foreach ($this->categories as $cid => $category) {
+      foreach ($this->attributes[$cid] as $attribute) {
+        $edit[$this->getAttributeFormName($category, $attribute)] = $this->randomString(20);
+      }
+    }
+
+    if (empty($save)) {
+      $save = t('Save');
+    }
+    $this->drupalPost(NULL, $edit, $save);
+
+    // Get node id and return it.
+    if (preg_match('|node/([0-9]+)|', $this->getUrl(), $match)) {
+      return reset(entity_load($entity, array($match[1])));
+    }
+  }
 }
 
 /**
@@ -283,8 +331,6 @@ class PropertiesTestCase extends PropertiesBaseTestCase {
 
     // Make sure that the moved attribute is shown in the correct category.
     // Meaning, after the last attribute in that category.
-    // @todo: Test does not work yet.
-    debug('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s');
     $this->assertPattern('/' . $this->attributes[1][2]->label . '.*' . $this->attributes[0][1]->label . '/s', t('Moved attribute is shown in the correct place.'));
 
     // Make sure the default order in category 2 is correct.

@@ -10,13 +10,18 @@
  * Base class for properties tests, provides helper methods.
  */
 class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
+
+  /**
+   * Contains the user object for the template user.
+   */
+  protected $templateUser;
+
   /**
    * Implements setUp().
    */
   function setUp() {
     parent::setUp('properties', 'properties_sql', 'properties_template');
-    $this->admin = NULL;
-    $this->editor = NULL;
+    $this->templateUser = NULL;
   }
 
   /**
@@ -30,6 +35,55 @@ class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
     }
     $this->drupalLogin($this->admin);
   }
+
+  /**
+   * Log in with administrative permissions.
+   *
+   * Admin user is created on-demand.
+   */
+  protected function loginTemplateUser() {
+    if (empty($this->templateUser)) {
+      $this->templateUser = $this->drupalCreateUser(array('create page content', 'edit own page content', 'add properties templates'));
+    }
+    $this->drupalLogin($this->templateUser);
+  }
+
+  /**
+   * Create a template with categories through the administration interface.
+   *
+   * @param $name
+   *   machine_name of template, a random name is generated when left empty.
+   * @param $label
+   *   Label of the template, a random label is generated when left empty.
+   * @param $attributes
+   *   An array of categories, that is added to the template.
+   *
+   * @return
+   *   Loaded category object.
+   */
+  protected function createTemplate($name = NULL, $label = NULL, $categories = array()) {
+    $template = array(
+      'name' => empty($name) ? drupal_strtolower($this->randomName(8)) : $name,
+      'label' => empty($label) ? $this->randomName(20) : $label,
+    );
+
+    $this->drupalPost('admin/config/content/properties/templates/add', $template, t('Add another category'));
+
+    for ($i = 0; $i < count($categories); $i++) {
+
+      $newAttribute = array(
+        "categories[$i][category]"  => $categories[$i]->name,
+      );
+      $this->drupalPost(NULL, $newAttribute, t('Add another category'));
+
+    }
+    $this->drupalPost(NULL, NULL, t('Add'));
+
+    $template_object = properties_template_load($template['name']);
+    $this->assertEqual($template_object->label, $template['label']);
+
+    return $template_object;
+  }
 }
 
 /**
@@ -41,8 +95,8 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => t('Templates creation'),
-      'description' => t('Tests the creation of a template.'),
+      'name' => t('Properties templates'),
+      'description' => t('Tests for administrating and using templates.'),
       'group' => t('Properties'),
     );
   }
@@ -51,7 +105,7 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
    * Creates two different categories, adds them to a template
    * and checks if the data is correctly displayed and stored.
    */
-  public function testCreating() {
+  public function testAdministration() {
     $this->loginAdmin();
 
     // Create the categories first
@@ -103,5 +157,52 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
     // look if the template was stored in the db
     $template_object = properties_template_load($template_name);
     $this->assertEqual($template_object->label, $template_label);
+  }
+
+  function testPropertyFieldCreation() {
+    $this->loginAdmin();
+
+    $this->createProperties();
+    $this->createField();
+
+    $template = $this->createTemplate(NULL, NULL, $this->categories);
+
+    $this->loginTemplateUser();
+    
+    // Verify that buttons to add attributes and categories don't exist.
+    $this->drupalGet('node/add/page');
+
+    // Select template.
+    $node = array(
+      'title' => $this->randomName(),
+      $this->field_prefix . '[actions][template]' => $template->name,
+    );
+
+    $this->drupalPost(NULL, $node, t('Select template'));
+
+    // Fill in values.
+    $values = array();
+    $edit = array();
+    foreach ($this->categories as $cid => $category) {
+      foreach ($this->attributes[$cid] as $attribute) {
+        $edit[$this->getAttributeFormName($category, $attribute)] = $values[$attribute->name] = $this->randomString(20);
+      }
+    }
+
+    // Save content.
+    $this->drupalPost(NULL, $edit, t('Save'));
+
+    // Build verification pattern.
+    $pattern = array();
+    foreach ($this->categories as $cid => $category) {
+      $pattern[] = $category->label;
+      foreach ($this->attributes[$cid] as $attribute) {
+        $pattern[] = $attribute->label;
+        $pattern[] = preg_quote($values[$attribute->name], '/');
+      }
+    }
+
+    $pattern = '/' . implode('.*', $pattern) . '/s';
+    $this->assertPattern($pattern, t('Properties are displayed in correct order.'));
   }
 }
