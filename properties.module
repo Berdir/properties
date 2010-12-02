@@ -296,7 +296,7 @@ function properties_field_validate($entity_type, $entity, $field, $instance, $la
  * Implements hook_field_is_empty().
  */
 function properties_field_is_empty($item, $field) {
-  return !is_array($item) || !is_array(reset($item));
+  return !is_array($item);
 }
 
 /**
@@ -356,7 +356,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
   drupal_add_js(drupal_get_path('module', 'properties') . '/properties.js');
 
   $categories = &$form_state[$field_name]['categories'];
-  if (!isset($form_state[$field_name]['categories'])) {
+  if (empty($form_state[$field_name]['categories'])) {
     $categories = array();
     // Set up initial content.
     foreach ($items as $item) {
