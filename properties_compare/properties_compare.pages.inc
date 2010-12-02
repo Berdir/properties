@@ -32,6 +32,7 @@ function properties_compare_page() {
       // Verify if property can be compared. Ignore if not.
       if (!properties_compare_is_comparable($first['entity_type'], $first['entity'], $item['entity_type'], $entity)) {
         unset($list[$key]);
+        drupal_set_message(t('%label can not be compared.', array('%label' => entity_label($item['entity_type'], $entity))), 'warning');
         continue;
       }
     }
