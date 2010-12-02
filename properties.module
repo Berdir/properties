@@ -274,6 +274,10 @@ function properties_field_presave($entity_type, $entity, $field, $instance, $lan
       }
       uasort($category['properties'], '_field_sort_items_helper');
       foreach ($category['properties'] as $property) {
+        // If the attribute name was deleted, attribute is empty. Ignore these.
+        if (empty($property['attribute'])) {
+          continue;;
+        }
         // Add them in the sorted order to the items array.
         $items[] = array(
           'attribute' => $property['attribute'],
@@ -731,8 +735,11 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
           if (isset($categories[$category]->attributes[$item['attribute']])) {
             $label = $categories[$category]->attributes[$item['attribute']]->label;
           }
-          else {
+          elseif (!empty($item['attribute'])) {
             $label = properties_attribute_load($item['attribute'])->label;
+          }
+          else {
+            continue;
           }
           $element[0][] = array(
             '#type' => 'user_profile_item',
