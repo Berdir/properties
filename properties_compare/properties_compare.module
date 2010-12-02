@@ -188,7 +188,7 @@ function properties_compare_block_info() {
 function properties_compare_block_view($delta = '') {
   if ($delta == 'compare_list') {
     // Do not display the block on the properties/compare page.
-    if (($list = properties_compare_list()) && $_GET['q'] != 'properties/compare') {
+    if (($list = properties_compare_list())) {
       return array(
         'subject' => t('Compare list'),
         'content' => drupal_get_form('properties_compare_list_form', $list),
@@ -202,9 +202,23 @@ function properties_compare_block_view($delta = '') {
  */
 function properties_compare_list_form($form, &$form_state, $list) {
   $items = array();
+  $first = NULL;
   foreach ($list as $compare_item) {
     $entity = reset(entity_load($compare_item['entity_type'], array($compare_item['entity_id'])));
-    $items[] = entity_label($compare_item['entity_type'], $entity);
+    $uri = entity_uri($compare_item['entity_type'], $entity);
+    $classes = array();
+    if (!$first) {
+      $first = $compare_item + array('entity' => $entity);
+      $classes[] = 'properties-comparable';
+    }
+    else {
+      $comparable = properties_compare_is_comparable($first['entity_type'], $first['entity'], $compare_item['entity_type'], $entity);
+      $classes[] = $comparable ? 'properties-comparable' : 'properties-not-comparable';
+    }
+    $items[] = array(
+      'data' => l(entity_label($compare_item['entity_type'], $entity), $uri['path'], $uri['options']),
+      'class' => $classes,
+    );
   }
 
   $form['items'] = array(
@@ -247,4 +261,49 @@ function properties_compare_list_form_clear_submit($form, &$form_state) {
  */
 function properties_compare_filter_categories($item) {
   return count($item) > 1;
+}
+
+/**
+ * Checks if two entites can be compared.
+ *
+ * @param $entity_type1
+ *   Entity type of first entity.
+ *
+ * @param $entity1
+ *   Object of first entity.
+ *
+ * @param $entity_type2
+ *   Entity type of second entity.
+ *
+ * @param $entity2
+ *   Object of second entity.
+ *
+ * @return
+ *   TRUE if entities can be compared, FALSE otherwise.
+ */
+function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2, $entity2) {
+  // First, check entity type.
+  if ($entity_type1 != $entity_type2) {
+    return FALSE;
+  }
+
+  // Then, verify if they have at least one common category.
+  $shared_category = FALSE;
+  foreach (properties_extract_fields($entity_type1, $entity1) as $field_content1) {
+    foreach ($field_content1 as $property1) {
+      foreach (properties_extract_fields($entity_type2, $entity2) as $field_content2) {
+        foreach ($field_content2 as $property2) {
+          if ($property1['category'] == $property2['category']) {
+            $shared_category = TRUE;
+            break 4;
+          }
+        }
+      }
+    }
+  }
+  if (!$shared_category) {
+    return FALSE;
+  }
+
+  return TRUE;
 }

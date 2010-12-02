@@ -21,9 +21,20 @@ function properties_compare_page() {
   $categories = array();
   $attributes = array();
   $entities = array();
+  $first = array();
   // First, loop over compare items to collect categories and attributes.
-  foreach ($list as $item) {
+  foreach ($list as $key => $item) {
     $entity = reset(entity_load($item['entity_type'], array($item['entity_id'])));
+    if (!$first) {
+      $first = $item + array('entity' => $entity);
+    }
+    else {
+      // Verify if property can be compared. Ignore if not.
+      if (!properties_compare_is_comparable($first['entity_type'], $first['entity'], $item['entity_type'], $entity)) {
+        unset($list[$key]);
+        continue;
+      }
+    }
     $entities[properties_compare_create_key($item['entity_type'], $entity)] = $entity;
     foreach (properties_extract_fields($item['entity_type'], $entity) as $field_content) {
       foreach ($field_content as $property) {
@@ -48,8 +59,8 @@ function properties_compare_page() {
   // Collect header.
   $header = array(t('Attributes'));
   foreach ($list as $item) {
-    $entity = $entities[$item['entity_type'] . '_' . $item['entity_id']];
-    $header[] = entity_label($item['entity_type'], $entity);
+      $entity = $entities[$item['entity_type'] . '_' . $item['entity_id']];
+      $header[] = entity_label($item['entity_type'], $entity);
   }
 
   // Collect rows.
