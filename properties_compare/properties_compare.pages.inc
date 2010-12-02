@@ -25,37 +25,15 @@ function properties_compare_page() {
   foreach ($list as $item) {
     $entity = reset(entity_load($item['entity_type'], array($item['entity_id'])));
     $entities[properties_compare_create_key($item['entity_type'], $entity)] = $entity;
+    foreach (properties_extract_fields($item['entity_type'], $entity) as $field_content) {
+      foreach ($field_content as $property) {
+        $id = properties_compare_create_key($item['entity_type'], $entity);
 
-    // Load fields attached to the entity.
-    $fields = field_info_instances($item['entity_type'], field_extract_bundle($item['entity_type'], $entity));
+        // Collect number of entities that have a given category.
+        $categories[$property['category']][$id] = TRUE;
 
-    // Get the display language for the entity.
-    $languages = field_language($item['entity_type'], $entity);
-
-    // Loop over fields.
-    foreach ($fields as $field_name => $field) {
-      $field_info = field_info_field_by_id($field['field_id']);
-
-      // Only handle properties fields.
-      if ($field_info['type'] == 'properties') {
-        // Load content for the configured language.
-        $field_all_languages = $entity->$field_name;
-        // Field is empty.
-        if (empty($field_all_languages)) {
-          continue;
-        }
-        $field_content = $field_all_languages[$languages[$field_name]];
-
-        // Loop over content of that field.
-        foreach ($field_content as $property) {
-          $id = properties_compare_create_key($item['entity_type'], $entity);
-
-          // Collect number of entities that have a given category.
-          $categories[$property['category']][$id] = TRUE;
-
-          // Keep values in a hierarchic way for the next step.
-          $attributes[$property['category']][$property['attribute']][$id] = $property['value'];
-        }
+        // Keep values in a hierarchic way for the next step.
+        $attributes[$property['category']][$property['attribute']][$id] = $property['value'];
       }
     }
   }

@@ -214,14 +214,14 @@ function properties_compare_list_form($form, &$form_state, $list) {
 
   $form['clear'] = array(
     '#type' => 'submit',
-    '#submit' => array('propertis_compare_list_form_clear_submit'),
+    '#submit' => array('properties_compare_list_form_clear_submit'),
     '#value' => t('Clear'),
   );
 
   if (count($items) > 1) {
     $form['compare'] = array(
       '#type' => 'submit',
-      '#submit' => array('propertis_compare_list_form_compare_submit'),
+      '#submit' => array('properties_compare_list_form_compare_submit'),
       '#value' => t('Compare'),
     );
   }
@@ -231,14 +231,14 @@ function properties_compare_list_form($form, &$form_state, $list) {
 /**
  * Submit callback for block list form, redirect to comparison table.
  */
-function propertis_compare_list_form_compare_submit($form, &$form_state) {
+function properties_compare_list_form_compare_submit($form, &$form_state) {
   $form_state['redirect'] = 'properties/compare';
 }
 
 /**
  * Submit callback for block list form, clear compare list.
  */
-function propertis_compare_list_form_clear_submit($form, &$form_state) {
+function properties_compare_list_form_clear_submit($form, &$form_state) {
   properties_compare_list_clear();
 }
 
