@@ -21,15 +21,23 @@ function properties_compare_permission() {
  * Implements hook_menu().
  */
 function properties_compare_menu() {
-  $item['properties/compare'] = array(
+  $items['properties/compare'] = array(
     'title' => 'Comparison',
     'page callback' => 'properties_compare_page',
     'file' => 'properties_compare.pages.inc',
     'access arguments' => array('compare properties'),
     'type' => MENU_CALLBACK,
   );
+  $items['properties/compare/delete/%/%'] = array(
+    'title' => 'Delete from compare list',
+    'page callback' => 'properties_compare_delete',
+    'page arguments' => array(3,4),
+    'file' => 'properties_compare.pages.inc',
+    'access arguments' => array('compare properties'),
+    'type' => MENU_CALLBACK,
+  );
 
-  return $item;
+  return $items;
 }
 
 /**
@@ -140,6 +148,21 @@ function &properties_compare_list() {
 }
 
 /**
+ * Delete an entity from the compare list.
+ * @param $entity_type
+ *   Entity type of the entity that should be removed.
+ * @param $entity_id
+ *   Entity id of the entity that should be removed.
+ */
+function properties_compare_list_delete($entity_type, $entity_id) {
+  $list = &properties_compare_list();
+  $id = $entity_type . '_' . $entity_id;
+  if (isset($list[$id])) {
+    unset($list[$id]);
+  }
+}
+
+/**
  * Add a new entity to the compare list.
  *
  * @param $entity_type
@@ -215,8 +238,12 @@ function properties_compare_list_form($form, &$form_state, $list) {
       $comparable = properties_compare_is_comparable($first['entity_type'], $first['entity'], $compare_item['entity_type'], $entity);
       $classes[] = $comparable ? 'properties-comparable' : 'properties-not-comparable';
     }
+
+    $entity_link = l(entity_label($compare_item['entity_type'], $entity), $uri['path'], $uri['options']);
+    $delete_link = l(t('x', array(), array('context' => 'delete')), 'properties/compare/delete/' . $compare_item['entity_type'] . '/' . $compare_item['entity_id'], array('query' => drupal_get_destination()));
+
     $items[] = array(
-      'data' => l(entity_label($compare_item['entity_type'], $entity), $uri['path'], $uri['options']),
+      'data' => t('!entity_link (!delete_link)', array('!entity_link' => $entity_link, '!delete_link' => $delete_link)),
       'class' => $classes,
     );
   }

@@ -101,3 +101,11 @@ function properties_compare_page() {
   }
   return theme('table', array('header' => $header, 'rows' => $rows));
 }
+
+/**
+ * Page calllback to remove an entity from the list.
+ */
+function properties_compare_delete($entity_type, $entity_id) {
+  properties_compare_list_delete($entity_type, $entity_id);
+  drupal_goto();
+}
