@@ -65,7 +65,7 @@ function properties_compare_field_extra_fields() {
   // Collect bundles with a properties field attached to them.
   foreach ($fields as $field) {
     if ($field['type'] == 'properties') {
-      $bundles += $field['bundles'];
+      $bundles = array_merge($bundles, $field['bundles']);
     }
   }
 
