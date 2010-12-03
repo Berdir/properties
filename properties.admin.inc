@@ -178,13 +178,13 @@ function properties_admin_attributes_form($form, &$form_state, $attribute = NULL
 
   if (empty($attribute->name)) {
     $form['add'] = array(
-      '#value' => t('Add'),
+      '#value' => t('Save'),
       '#type' => 'submit',
       '#submit' => array('properties_admin_attributes_add'),
     );
 
     $form['add_another'] = array(
-      '#value' => t('Add another'),
+      '#value' => t('Save and add another'),
       '#type' => 'submit',
       '#submit' => array('properties_admin_attributes_add_another'),
     );
@@ -357,13 +357,13 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
 
   if (empty($category->name)) {
     $form['add'] = array(
-      '#value' => t('Add'),
+      '#value' => t('Save'),
       '#type' => 'submit',
       '#submit' => array('properties_admin_categories_add'),
     );
 
     $form['add_another'] = array(
-      '#value' => t('Add another'),
+      '#value' => t('Save and add another'),
       '#type' => 'submit',
       '#submit' => array('properties_admin_categories_add_another'),
     );
