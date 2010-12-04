@@ -84,7 +84,7 @@ foreach (element_children($element['listing']) as $category_name) {
   }
 }
 
-$output = '<div class="form-item">';
+$output = '<div class="form-item field-widget-properties-table">';
 $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('properties-table'))));
 $output .= '<div class="clearfix inline">' . drupal_render($element['actions']) . '</div>';
 $output .= '</div>';
