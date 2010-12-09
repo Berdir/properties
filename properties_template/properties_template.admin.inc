@@ -219,7 +219,7 @@ function properties_template_admin_templates_form_validate($form, &$form_state) 
   $form_state['template']->label = $form_state['values']['label'];
   $form_state['template']->name = $form_state['values']['name'];
   $form_state['template']->categories = array();
-  uasort($form_state['values']['categories'], '_field_sort_items_value_helper');
+  uasort($form_state['values']['categories'], '_field_sort_items_helper');
   foreach ($form_state['values']['categories'] as $name => $category) {
     if (is_array($category) && isset($category['category'])) {
       if (empty($category['category'])) {

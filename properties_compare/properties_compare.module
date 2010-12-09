@@ -65,7 +65,7 @@ function properties_compare_field_extra_fields() {
   // Collect bundles with a properties field attached to them.
   foreach ($fields as $field) {
     if ($field['type'] == 'properties') {
-      $bundles += $field['bundles'];
+      $bundles = array_merge($bundles, $field['bundles']);
     }
   }
 
@@ -111,9 +111,12 @@ function properties_compare_add_form($form, &$form_state, $entity_type, $entity)
     '#type' => 'value',
     '#value' => $entity,
   );
+  $exists = properties_compare_list_exists($entity_type, $entity);
+  $full = properties_compare_list_is_full();
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Add to compare list'),
+    '#disabled' => $exists || $full,
+    '#value' => $exists ? t('In comparison') : ($full ? t('Comparison list full') : t('Add to compare list')),
   );
   return $form;
 }
@@ -145,6 +148,29 @@ function &properties_compare_list() {
     $_SESSION['properties_compare_list'] = array();
   }
   return $_SESSION['properties_compare_list'];
+}
+
+/**
+ * Checks if the compare list is full.
+ */
+function properties_compare_list_is_full() {
+  $count = count(properties_compare_list());
+  return $count >= variable_get('properties_compare_list_size', 4);
+}
+
+/**
+ * Checks if an entity is already in the compare list.
+ *
+ * @param $entity_type
+ *   Entity type of the entity that should be checked.
+ * @param $entity
+ *   Entity object that should be checked.
+ */
+function properties_compare_list_exists($entity_type, $entity) {
+  $list = properties_compare_list();
+  list($id, , ) = entity_extract_ids($entity_type, $entity);
+  $key = $entity_type . '_' . $id;
+  return isset($list[$key]);
 }
 
 /**
@@ -224,11 +250,17 @@ function properties_compare_block_view($delta = '') {
  * Form builder function; display comparison list.
  */
 function properties_compare_list_form($form, &$form_state, $list) {
+
+  drupal_add_css(drupal_get_path('module', 'properties_compare') . '/properties_compare.css');
+
   $items = array();
   $first = NULL;
+  $noncomparable = FALSE;
   foreach ($list as $compare_item) {
     $entity = reset(entity_load($compare_item['entity_type'], array($compare_item['entity_id'])));
     $uri = entity_uri($compare_item['entity_type'], $entity);
+    $uri['options'] += array('attributes' => array('class' => array('properties-compare-entity-link')));
+    $suffix = '';
     $classes = array();
     if (!$first) {
       $first = $compare_item + array('entity' => $entity);
@@ -236,10 +268,25 @@ function properties_compare_list_form($form, &$form_state, $list) {
     }
     else {
       $comparable = properties_compare_is_comparable($first['entity_type'], $first['entity'], $compare_item['entity_type'], $entity);
+      if (!$comparable) {
+        $suffix = ' *';
+        $noncomparable = TRUE;
+      }
       $classes[] = $comparable ? 'properties-comparable' : 'properties-not-comparable';
     }
+    
+    // View mode functionality only implemented for entity_type node.
+    if ($compare_item['entity_type'] == 'node' && variable_get('properties_compare_view_mode', TRUE)) {
+      $content = node_view($entity, 'properties_compare_block');
+      $content['links']['#access'] = FALSE;
+      $label = drupal_render($content);
+      $uri['options']['html'] = TRUE;
+    }
+    else {
+      $label = entity_label($compare_item['entity_type'], $entity);
+    }
 
-    $entity_link = l(entity_label($compare_item['entity_type'], $entity), $uri['path'], $uri['options']);
+    $entity_link = l($label . $suffix, $uri['path'], $uri['options']);
     $delete_link = l(t('x', array(), array('context' => 'delete')), 'properties/compare/delete/' . $compare_item['entity_type'] . '/' . $compare_item['entity_id'], array('query' => drupal_get_destination()));
 
     $items[] = array(
@@ -253,19 +300,27 @@ function properties_compare_list_form($form, &$form_state, $list) {
     '#items' => $items,
   );
 
-  $form['clear'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['clear'] = array(
     '#type' => 'submit',
     '#submit' => array('properties_compare_list_form_clear_submit'),
     '#value' => t('Clear'),
   );
 
   if (count($items) > 1) {
-    $form['compare'] = array(
+    $form['actions']['compare'] = array(
       '#type' => 'submit',
       '#submit' => array('properties_compare_list_form_compare_submit'),
       '#value' => t('Compare'),
     );
   }
+
+  if ($noncomparable) {
+    $form['notice'] = array(
+      '#markup' => '<div class="properties-not-comparable-notice" >' . t('* Can not be compared with current selection.') . '</div>',
+    );
+  }
+
   return $form;
 }
 
@@ -314,7 +369,26 @@ function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2
     return FALSE;
   }
 
-  // Then, verify if they have at least one common category.
+  // Loop over hook implementations. They can either return TRUE (allow), FALSE
+  // (deny) or NULL (ignore). Access is allowed if at least one implementation
+  // returns TRUE and none returns FALSE. If neither happens, the check falls
+  // back to the default category check.
+  $allow = FALSE;
+  foreach (module_implements('properties_compare_comparable') as $module) {
+    $return = module_invoke($module, 'properties_compare_comparable', $entity_type1, $entity1, $entity_type2, $entity2);
+    if ($return === FALSE) {
+      return FALSE;
+    }
+    elseif ($return === TRUE) {
+      $allow = TRUE;
+    }
+  }
+  if ($allow) {
+    return TRUE;
+  }
+
+  // No hook returned something, check if there are any shared categories, if
+  // yes, allow comparing.
   $shared_category = FALSE;
   foreach (properties_extract_fields($entity_type1, $entity1) as $field_content1) {
     foreach ($field_content1 as $property1) {
@@ -331,6 +405,24 @@ function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2
   if (!$shared_category) {
     return FALSE;
   }
-
   return TRUE;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function properties_compare_entity_info() {
+  if (variable_get('properties_compare_view_mode', TRUE)) {  
+    $return['node']['view modes'] = array(
+      'properties_compare_block' => array(
+        'label' => t('Properties compare block list'),
+        'custom settings' => TRUE,
+      ),
+      'properties_compare_page' => array(
+        'label' => t('Properties compare page header'),
+        'custom settings' => TRUE,
+      ),
+    );
+  }
+  return $return;
 }
