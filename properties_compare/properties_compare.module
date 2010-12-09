@@ -48,6 +48,11 @@ function properties_compare_entity_view($entity, $type, $view_mode, $langcode) {
     return;
   }
 
+  // Never display fields inside block list view.
+  if (strpos($view_mode, 'properties_compare') !== FALSE) {
+    return;
+  }
+
   $extra_fields = field_extra_fields_get_display($type, field_extract_bundle($type, $entity), $view_mode);
   // Verify if button should be displayed for this view mode.
   if (isset($extra_fields['properties_compare']) && (!isset($extra_fields['properties_compare']['visibility']) || $extra_fields['properties_compare']['visibility'])) {
