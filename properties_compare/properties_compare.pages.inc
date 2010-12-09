@@ -61,11 +61,20 @@ function properties_compare_page() {
   $header = array(t('Attributes'));
   foreach ($list as $item) {
       $entity = $entities[$item['entity_type'] . '_' . $item['entity_id']];
-      $header[] = entity_label($item['entity_type'], $entity);
+      // View mode functionality only implemented for entity_type node.
+      if ($item['entity_type'] == 'node' && variable_get('properties_compare_view_mode', TRUE)) {
+        $content = node_view($entity, 'properties_compare_page');
+        $content['links']['#access'] = FALSE;
+        $header[] = drupal_render($content);
+        $uri['options']['html'] = TRUE;
+      }
+      else {
+        $header[] = entity_label($item['entity_type'], $entity);
+      }
   }
 
   // Collect rows.
-  $rows = array();
+  $rows = array($header);
   foreach ($shared_categories as $shared_category => $value) {
     // Add a header row for the category.
     $rows[] = array(
@@ -99,7 +108,7 @@ function properties_compare_page() {
       $rows[] = $row;
     }
   }
-  return theme('table', array('header' => $header, 'rows' => $rows));
+  return theme('table', array('rows' => $rows));
 }
 
 /**

@@ -274,8 +274,19 @@ function properties_compare_list_form($form, &$form_state, $list) {
       }
       $classes[] = $comparable ? 'properties-comparable' : 'properties-not-comparable';
     }
+    
+    // View mode functionality only implemented for entity_type node.
+    if ($compare_item['entity_type'] == 'node' && variable_get('properties_compare_view_mode', TRUE)) {
+      $content = node_view($entity, 'properties_compare_block');
+      $content['links']['#access'] = FALSE;
+      $label = drupal_render($content);
+      $uri['options']['html'] = TRUE;
+    }
+    else {
+      $label = entity_label($compare_item['entity_type'], $entity);
+    }
 
-    $entity_link = l(entity_label($compare_item['entity_type'], $entity) . $suffix, $uri['path'], $uri['options']);
+    $entity_link = l($label . $suffix, $uri['path'], $uri['options']);
     $delete_link = l(t('x', array(), array('context' => 'delete')), 'properties/compare/delete/' . $compare_item['entity_type'] . '/' . $compare_item['entity_id'], array('query' => drupal_get_destination()));
 
     $items[] = array(
@@ -395,4 +406,23 @@ function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2
     return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function properties_compare_entity_info() {
+  if (variable_get('properties_compare_view_mode', TRUE)) {  
+    $return['node']['view modes'] = array(
+      'properties_compare_block' => array(
+        'label' => t('Properties compare block list'),
+        'custom settings' => TRUE,
+      ),
+      'properties_compare_page' => array(
+        'label' => t('Properties compare page header'),
+        'custom settings' => TRUE,
+      ),
+    );
+  }
+  return $return;
 }
