@@ -111,9 +111,11 @@ function properties_compare_add_form($form, &$form_state, $entity_type, $entity)
     '#type' => 'value',
     '#value' => $entity,
   );
+  $exists = properties_compare_list_exists($entity_type, $entity);
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Add to compare list'),
+    '#disabled' => $exists,
+    '#value' => $exists ? t('In comparison') : t('Add to compare list'),
   );
   return $form;
 }
@@ -145,6 +147,21 @@ function &properties_compare_list() {
     $_SESSION['properties_compare_list'] = array();
   }
   return $_SESSION['properties_compare_list'];
+}
+
+/**
+ * Checks if an entity is already in the compare list.
+ *
+ * @param $entity_type
+ *   Entity type of the entity that should be checked.
+ * @param $entity
+ *   Entity object that should be checked.
+ */
+function properties_compare_list_exists($entity_type, $entity) {
+  $list = properties_compare_list();
+  list($id, , ) = entity_extract_ids($entity_type, $entity);
+  $key = $entity_type . '_' . $id;
+  return isset($list[$key]);
 }
 
 /**
