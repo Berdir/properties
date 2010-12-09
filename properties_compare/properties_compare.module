@@ -314,7 +314,26 @@ function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2
     return FALSE;
   }
 
-  // Then, verify if they have at least one common category.
+  // Loop over hook implementations. They can either return TRUE (allow), FALSE
+  // (deny) or NULL (ignore). Access is allowed if at least one implementation
+  // returns TRUE and none returns FALSE. If neither happens, the check falls
+  // back to the default category check.
+  $allow = FALSE;
+  foreach (module_implements('properties_compare_comparable') as $module) {
+    $return = module_invoke($module, 'properties_compare_comparable', $entity_type1, $entity1, $entity_type2, $entity2);
+    if ($return === FALSE) {
+      return FALSE;
+    }
+    elseif ($return === TRUE) {
+      $allow = TRUE;
+    }
+  }
+  if ($allow) {
+    return TRUE;
+  }
+
+  // No hook returned something, check if there are any shared categories, if
+  // yes, allow comparing.
   $shared_category = FALSE;
   foreach (properties_extract_fields($entity_type1, $entity1) as $field_content1) {
     foreach ($field_content1 as $property1) {
@@ -331,6 +350,5 @@ function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2
   if (!$shared_category) {
     return FALSE;
   }
-
   return TRUE;
 }
