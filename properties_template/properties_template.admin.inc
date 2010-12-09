@@ -155,13 +155,13 @@ function properties_template_admin_templates_form($form, &$form_state, $template
 
   if (empty($template->name)) {
     $form['add'] = array(
-      '#value' => t('Add'),
+      '#value' => t('Save'),
       '#type' => 'submit',
       '#submit' => array('properties_template_admin_templates_add'),
     );
 
     $form['add_another'] = array(
-      '#value' => t('Add another'),
+      '#value' => t('Save and add another'),
       '#type' => 'submit',
       '#submit' => array('properties_template_admin_templates_add_another'),
     );

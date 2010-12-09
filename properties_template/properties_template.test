@@ -77,7 +77,7 @@ class PropertiesTemplateBaseTestCase extends PropertiesBaseTestCase {
       $this->drupalPost(NULL, $newAttribute, t('Add another category'));
 
     }
-    $this->drupalPost(NULL, NULL, t('Add'));
+    $this->drupalPost(NULL, NULL, t('Save'));
 
     $template_object = properties_template_load($template['name']);
     $this->assertEqual($template_object->label, $template['label']);
@@ -147,7 +147,7 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
     $this->assertText($category2->label);
 
     // Click add
-    $this->drupalPost(NULL, NULL, t('Add'));
+    $this->drupalPost(NULL, NULL, t('Save'));
 
     // look if the new generated template occurs in the list
     $this->drupalGet('admin/config/content/properties/templates');

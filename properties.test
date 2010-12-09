@@ -93,7 +93,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
       'name' => empty($name) ? drupal_strtolower($this->randomName(8)) : $name,
       'label' => empty($label) ? $this->randomName(20) : $label,
     );
-    $this->drupalPost('admin/config/content/properties/attributes/add', $attribute, t('Add'));
+    $this->drupalPost('admin/config/content/properties/attributes/add', $attribute, t('Save'));
     $this->assertText(t('Attribute created.'));
     $attribute_object = properties_attribute_load($attribute['name']);
     $this->assertEqual($attribute_object->label, $attribute['label']);
@@ -129,7 +129,7 @@ class PropertiesBaseTestCase extends DrupalWebTestCase {
       $this->drupalPost(NULL, $newAttribute, t('Add another attribute'));
 
     }
-    $this->drupalPost(NULL, NULL, t('Add'));
+    $this->drupalPost(NULL, NULL, t('Save'));
 
     $category_object = properties_category_load($category['name']);
     $this->assertEqual($category_object->label, $category['label']);
@@ -451,13 +451,13 @@ class PropertiesAdministrationTestCase extends PropertiesBaseTestCase {
     $new_attribute = array(
       'attributes[2][attribute]' => $name = drupal_strtolower($this->randomName()),
     );
-    $this->drupalPost(NULL, $new_attribute, t('Add'));
+    $this->drupalPost(NULL, $new_attribute, t('Save'));
     $this->assertText(t('Attribute @name does not exist, a label must be provided to create it.', array('@name' => $name)));
 
     $label = array(
       'attributes[' . $name . '][label]' => $new_label = $this->randomName(20),
     );
-    $this->drupalPost(NULL, $label, t('Add'));
+    $this->drupalPost(NULL, $label, t('Save'));
     $this->assertText(t('Category created.'));
 
     // Verify that new attribute has been created.
