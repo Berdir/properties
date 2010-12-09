@@ -112,10 +112,11 @@ function properties_compare_add_form($form, &$form_state, $entity_type, $entity)
     '#value' => $entity,
   );
   $exists = properties_compare_list_exists($entity_type, $entity);
+  $full = properties_compare_list_is_full();
   $form['submit'] = array(
     '#type' => 'submit',
-    '#disabled' => $exists,
-    '#value' => $exists ? t('In comparison') : t('Add to compare list'),
+    '#disabled' => $exists || $full,
+    '#value' => $exists ? t('In comparison') : ($full ? t('Comparison list full') : t('Add to compare list')),
   );
   return $form;
 }
@@ -147,6 +148,14 @@ function &properties_compare_list() {
     $_SESSION['properties_compare_list'] = array();
   }
   return $_SESSION['properties_compare_list'];
+}
+
+/**
+ * Checks if the compare list is full.
+ */
+function properties_compare_list_is_full() {
+  $count = count(properties_compare_list());
+  return $count >= variable_get('properties_compare_list_size', 4);
 }
 
 /**
