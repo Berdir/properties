@@ -224,11 +224,17 @@ function properties_compare_block_view($delta = '') {
  * Form builder function; display comparison list.
  */
 function properties_compare_list_form($form, &$form_state, $list) {
+
+  drupal_add_css(drupal_get_path('module', 'properties_compare') . '/properties_compare.css');
+
   $items = array();
   $first = NULL;
+  $noncomparable = FALSE;
   foreach ($list as $compare_item) {
     $entity = reset(entity_load($compare_item['entity_type'], array($compare_item['entity_id'])));
     $uri = entity_uri($compare_item['entity_type'], $entity);
+    $uri['options'] += array('attributes' => array('class' => array('properties-compare-entity-link')));
+    $suffix = '';
     $classes = array();
     if (!$first) {
       $first = $compare_item + array('entity' => $entity);
@@ -236,10 +242,14 @@ function properties_compare_list_form($form, &$form_state, $list) {
     }
     else {
       $comparable = properties_compare_is_comparable($first['entity_type'], $first['entity'], $compare_item['entity_type'], $entity);
+      if (!$comparable) {
+        $suffix = ' *';
+        $noncomparable = TRUE;
+      }
       $classes[] = $comparable ? 'properties-comparable' : 'properties-not-comparable';
     }
 
-    $entity_link = l(entity_label($compare_item['entity_type'], $entity), $uri['path'], $uri['options']);
+    $entity_link = l(entity_label($compare_item['entity_type'], $entity) . $suffix, $uri['path'], $uri['options']);
     $delete_link = l(t('x', array(), array('context' => 'delete')), 'properties/compare/delete/' . $compare_item['entity_type'] . '/' . $compare_item['entity_id'], array('query' => drupal_get_destination()));
 
     $items[] = array(
@@ -253,19 +263,27 @@ function properties_compare_list_form($form, &$form_state, $list) {
     '#items' => $items,
   );
 
-  $form['clear'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['clear'] = array(
     '#type' => 'submit',
     '#submit' => array('properties_compare_list_form_clear_submit'),
     '#value' => t('Clear'),
   );
 
   if (count($items) > 1) {
-    $form['compare'] = array(
+    $form['actions']['compare'] = array(
       '#type' => 'submit',
       '#submit' => array('properties_compare_list_form_compare_submit'),
       '#value' => t('Compare'),
     );
   }
+
+  if ($noncomparable) {
+    $form['notice'] = array(
+      '#markup' => '<div class="properties-not-comparable-notice" >' . t('* Can not be compared with current selection.') . '</div>',
+    );
+  }
+
   return $form;
 }
 
