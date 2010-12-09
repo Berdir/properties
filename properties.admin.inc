@@ -384,7 +384,7 @@ function properties_admin_categories_form_validate($form, &$form_state) {
   $form_state['category']->name = $form_state['values']['name'];
   $form_state['category']->attributes = array();
 
-  uasort($form_state['values']['attributes'], '_field_sort_items_value_helper');
+  uasort($form_state['values']['attributes'], '_field_sort_items_helper');
   foreach ($form_state['values']['attributes'] as $name => $attribute) {
     if (is_array($attribute) && isset($attribute['attribute'])) {
       if (empty($attribute['attribute'])) {
