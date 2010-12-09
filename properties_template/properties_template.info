@@ -6,3 +6,4 @@ files[] = properties_template.module
 files[] = properties_template.admin.inc
 files[] = properties_template.test
 dependencies[] = properties
+configure = admin/config/content/properties/templates

@@ -157,10 +157,7 @@ function properties_template_theme() {
  * Implements hook_field_attach_form().
  */
 function properties_template_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
-  // Bail out if permissions are missing.
-  if (!user_access('add properties templates')) {
-    return;
-  }
+
 
   // Load fields attached to the entity.
   $fields = field_info_instances($form['#entity_type'], $form['#bundle']);
@@ -177,6 +174,11 @@ function properties_template_field_attach_form($entity_type, $entity, &$form, &$
     if ($field_info['type'] == 'properties' && isset($form_state[$field_name])) {
       // Display template selection only when there are no properties.
       if (empty($form_state[$field_name]['categories'])) {
+
+        // Bail out if permissions are missing.
+        if (!user_access('add properties templates')) {
+           return;
+        }
 
         // Prepare options for select.
         $templates = array(t('Choose template...'));
@@ -204,6 +206,27 @@ function properties_template_field_attach_form($entity_type, $entity, &$form, &$
           ),
         );
         $form[$field_name][$langcode]['actions'] += $element;
+      } else {
+
+        // Bail out if permissions are missing.
+        if (!user_access('administer templates')) {
+           return;
+        }
+        
+        list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
+        $query = array('entity_type' => $entity_type, 'entity_id' => $entity_id, 'field_name' => $field_name);
+
+        $nodeId = $form['nid']['#value'];
+        // should create such a query object ?enity_type=node&entity_id=78
+        $link = 'admin/config/content/properties/templates/add/';
+        $element['template'] = array(
+          '#type' => 'link',
+          '#title' => t('Export as template'),
+          '#href' => $link,
+          '#options' => array('query' => $query),
+        );
+        $form[$field_name][$langcode]['actions'] += $element;
+
       }
     }
   }
