@@ -223,7 +223,7 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
     $this->clickLink(t('Edit'));
     // Export as template
     $this->clickLink(t('Export as template'));
-    // Check if all labels occur in the new page
+    // Loop over the categories and check if labels occur in the new page
     foreach ($this->categories as $category) {
       $this->assertText($category->label);
     }

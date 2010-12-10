@@ -86,7 +86,7 @@ function properties_template_theme() {
 }
 
 /**
- * Load a template based on the name.
+ * Load a template based on the provided name.
  *
  * @param $name
  *   Template name.

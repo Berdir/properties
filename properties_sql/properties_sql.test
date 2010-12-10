@@ -2,8 +2,6 @@
 // $Id$
 
 /**
- * @file
- * Contains tests for the properties_sql.module
  * This module is tested with the tests from the properties module.
  */
 

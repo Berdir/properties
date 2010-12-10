@@ -186,7 +186,6 @@ function properties_template_admin_templates_form($form, &$form_state, $template
       ),
   );
 
-  // TODO: add categories-wrapper
   $form['categories'] = $categories;
 
   if (empty($template->name)) {
