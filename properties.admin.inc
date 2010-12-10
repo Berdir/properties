@@ -401,10 +401,13 @@ function properties_admin_categories_form_validate($form, &$form_state) {
       }
       else {
         // Update empty attribute.
-        $form_state['category']->attributes[$attribute['attribute']]->name = $attribute['attribute'];
-        $form_state['category']->attributes[$attribute['attribute']]->label = isset($attribute['label']) ? $attribute['label'] : '';
-        $form_state['category']->attributes[$attribute['attribute']]->weight = count($form_state['category']->attributes);
-        $form_state['category']->attributes[$attribute['attribute']]->new = TRUE;
+        $attribute_object = (object)array(
+          'label' => isset($attribute['label']) ? $attribute['label'] : '',
+          'name' => $attribute['attribute'],
+          'weight' => count($form_state['category']->attributes),
+          'new' => TRUE,
+        );
+        $form_state['category']->attributes[$attribute['attribute']] = $attribute_object;
 
         // If label is empty, add validation error.
         if (empty($form_state['category']->attributes[$attribute['attribute']]->label)) {

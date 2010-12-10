@@ -242,7 +242,9 @@ function properties_template_submit_select_template($form, &$form_state) {
   // Load categories of template and add them to the form.
   if (!empty($values['template'])) {
     $template = properties_template_load($values['template']);
-    foreach (properties_category_load_multiple(array_keys($template->categories)) as $category) {
+    $categories = properties_category_load_multiple(array_keys($template->categories));
+    foreach ($template->categories as $cname => $c) {
+      $category = $categories[$cname];
       properties_widget_add_category($category, $form_state, $field_name, $langcode);
     }
   }
