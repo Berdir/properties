@@ -159,7 +159,10 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
     $this->assertEqual($template_object->label, $template_label);
   }
 
-  function testPropertyFieldCreation() {
+  /**
+   * Create a content based on a template.
+   */
+  public function testPropertyFieldCreation() {
     $this->loginAdmin();
 
     $this->createProperties();
@@ -204,5 +207,44 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
 
     $pattern = '/' . implode('.*', $pattern) . '/s';
     $this->assertPattern($pattern, t('Properties are displayed in correct order.'));
+  }
+
+  /**
+   * Test for exporting a content as template.
+   */
+  public function testExportAsTemplate() {
+    $this->loginAdmin();
+
+    $this->createProperties();
+    $this->createField();
+    $node = $this->createEntity();
+
+    // Click edit
+    $this->clickLink(t('Edit'));
+    // Export as template
+    $this->clickLink(t('Export as template'));
+    // Check if all labels occur in the new page
+    foreach ($this->categories as $category) {
+      $this->assertText($category->label);
+    }
+
+    $template_name = drupal_strtolower($this->randomName(8));
+    $template_label = $this->randomName(20);
+    // submit template form
+    $template_form = array(
+      'name' => $template_name,
+      'label' => $template_label,
+    );
+    $this->drupalPost(NULL, $template_form, t('Save'));
+
+    // look if the new generated template occurs in the list
+    $this->drupalGet('admin/config/content/properties/templates');
+    $this->assertText($template_name);
+    $this->assertText($template_label);
+
+    // look if the template was stored in the db
+    $template_object = properties_template_load($template_name);
+    $this->assertEqual($template_object->label, $template_label);
+
   }
 }

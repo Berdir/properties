@@ -73,6 +73,17 @@ function properties_template_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_theme().
+ */
+function properties_template_theme() {
+  return array(
+    'properties_template_admin_templates_categories_form' => array(
+      'render element' => 'element',
+      'file' => 'properties_template.admin.inc',
+    ),
+  );
+}
 
 /**
  * Load a template based on the name.
@@ -142,18 +153,6 @@ function properties_template_delete($template) {
 }
 
 /**
- * Implements hook_theme().
- */
-function properties_template_theme() {
-  return array(
-    'properties_template_admin_templates_categories_form' => array(
-      'render element' => 'element',
-      'file' => 'properties_template.admin.inc',
-    ),
-  );
-}
-
-/**
  * Implements hook_field_attach_form().
  */
 function properties_template_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
@@ -209,7 +208,7 @@ function properties_template_field_attach_form($entity_type, $entity, &$form, &$
       } else {
 
         // Bail out if permissions are missing.
-        if (!user_access('administer templates')) {
+        if (!user_access('administer properties templates')) {
            return;
         }
         
