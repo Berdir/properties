@@ -30,7 +30,7 @@ function properties_template_admin_templates_list() {
     $links = array(l(t('edit'), 'admin/config/content/properties/templates/edit/' . $template->name, $url_options), l(t('delete'), 'admin/config/content/properties/templates/delete/' . $template->name, $url_options));
 
     $rows[] = array(
-        $template->name,
+        check_plain($template->name),
         check_plain($template->label),
         implode(' ', $links),
     );

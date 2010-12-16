@@ -29,7 +29,7 @@ function properties_admin_categories_list() {
     $links = array(l(t('edit'), 'admin/config/content/properties/categories/edit/' . $category->name, $url_options), l(t('delete'), 'admin/config/content/properties/categories/delete/' . $category->name, $url_options));
 
     $rows[] = array(
-      $category->name,
+      check_plain($category->name),
       check_plain($category->label),
       implode(' ', $links),
     );
@@ -73,7 +73,7 @@ function properties_admin_attributes_list($form, $form_state) {
     $links = array(l(t('edit'), 'admin/config/content/properties/attributes/edit/' . $attribute->name, $url_options), l(t('delete'), 'admin/config/content/properties/attributes/delete/' . $attribute->name, $url_options));
 
     $rows[] = array(
-      $attribute->name,
+      check_plain($attribute->name),
       check_plain($attribute->label),
       implode(' ', $links),
     );
@@ -136,7 +136,7 @@ function properties_admin_attributes_list_submit($form, &$form_state) {
  * Rset callback, does not rebuild the form.
  */
 function properties_admin_attributes_list_submit_reset($form, &$form_state) {
-  
+
 }
 
 /**
