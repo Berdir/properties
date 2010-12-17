@@ -201,7 +201,7 @@ class PropertiesTemplateTestCase extends PropertiesTemplateBaseTestCase {
       $pattern[] = $category->label;
       foreach ($this->attributes[$cid] as $attribute) {
         $pattern[] = $attribute->label;
-        $pattern[] = preg_quote($values[$attribute->name], '/');
+        $pattern[] = preg_quote(check_plain($values[$attribute->name]), '/');
       }
     }
 

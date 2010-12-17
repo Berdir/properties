@@ -88,14 +88,14 @@ class PropertiesCompareTestCase extends PropertiesBaseTestCase {
       // Add the label of the category to the pattern if it changed.
       if (!$current_category || $item['category'] != $current_category->name) {
         $current_category = properties_category_load($item['category']);
-        $patterns[] = $current_category->label;
+        $patterns[] = check_plain($current_category->label);
       }
       // Add the attribute label to the pattern list.
-      $patterns[] = $current_category->attributes[$item['attribute']]->label;
+      $patterns[] = check_plain($current_category->attributes[$item['attribute']]->label);
 
       // Add the value for both nodes.
-      $patterns[] = preg_quote($item['value'], '/');
-      $patterns[] = preg_quote($second_node->{'field_' . $this->field_name}['und'][$key]['value'], '/');
+      $patterns[] = preg_quote(check_plain($item['value']), '/');
+      $patterns[] = preg_quote(check_plain($second_node->{'field_' . $this->field_name}['und'][$key]['value']), '/');
     }
 
     $pattern = '/' . implode('.*', $patterns) . '/s';

@@ -79,7 +79,7 @@ function properties_compare_page() {
     // Add a header row for the category.
     $rows[] = array(
       array(
-        'data' => $loaded_categories[$shared_category]->label,
+        'data' => check_plain($loaded_categories[$shared_category]->label),
         'header' => TRUE,
         'colspan' => count($list) + 1,
       ),
@@ -91,7 +91,7 @@ function properties_compare_page() {
     // Loop over attributes of this category.
     foreach ($attributes[$shared_category] as $attribute_name => $field_values) {
       // First cell is the attribute label.
-      $row = array(array('data' => $loaded_attributes[$attribute_name]->label));
+      $row = array(array('data' => check_plain($loaded_attributes[$attribute_name]->label)));
       // Loop over entites in list.
       foreach ($list as $item) {
         $entity = $entities[$item['entity_type'] . '_' . $item['entity_id']];
@@ -99,7 +99,7 @@ function properties_compare_page() {
         // Check if this entity has a value for this attribute. If yes, display
         // the value, if not, display as an empty cell.
         if (isset($field_values[$id])) {
-          $row[] = $field_values[$id];
+          $row[] = check_plain($field_values[$id]);
         }
         else {
           $row[] = '&nbsp;';
