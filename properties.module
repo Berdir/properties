@@ -477,7 +477,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         ),
       );
       $element['label'] = array(
-        '#markup' => !empty($property['attribute']) ? check_plain(properties_attribute_load($property['attribute'])) : '',
+        '#markup' => !empty($property['attribute']) ? check_plain(properties_attribute_load($property['attribute'])->label) : '',
       );
 
       $element['value'] = array(
