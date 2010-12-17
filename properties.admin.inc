@@ -312,7 +312,7 @@ function properties_admin_categories_form($form, &$form_state, $category = NULL)
     }
     else {
       $element['label'] = array(
-        '#markup' => $attribute->label,
+        '#markup' => check_plain($attribute->label),
       );
     }
 

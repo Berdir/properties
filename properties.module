@@ -477,7 +477,7 @@ function properties_field_widget_form(&$form, &$form_state, $field, $instance, $
         ),
       );
       $element['label'] = array(
-        '#markup' => !empty($property['attribute']) ? properties_attribute_load($property['attribute'])->label : '',
+        '#markup' => !empty($property['attribute']) ? check_plain(properties_attribute_load($property['attribute'])) : '',
       );
 
       $element['value'] = array(
@@ -744,7 +744,7 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
           $element[0][] = array(
             '#type' => 'user_profile_item',
             '#title' => $label,
-            '#markup' => $item['value'],
+            '#markup' => check_plain($item['value']),
           );
         }
       }
@@ -767,7 +767,7 @@ function properties_field_formatter_view($entity_type, $entity, $field, $instanc
           else {
             $label = properties_attribute_load($item['attribute'])->label;
           }
-          $rows[] = array($label, $item['value']);
+          $rows[] = array(check_plain($label), check_plain($item['value']));
         }
       }
       $element[0]['#markup'] = theme('table', array('rows' => $rows));
