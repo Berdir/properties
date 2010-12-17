@@ -263,6 +263,12 @@ function properties_compare_list_form($form, &$form_state, $list) {
   $noncomparable = FALSE;
   foreach ($list as $compare_item) {
     $entity = reset(entity_load($compare_item['entity_type'], array($compare_item['entity_id'])));
+    if (!$entity) {
+      // Entity could not be loaded, ignore and remove from list.
+      properties_compare_list_delete($compare_item['entity_type'], $compare_item['entity_id']);
+      continue;
+    }
+
     $uri = entity_uri($compare_item['entity_type'], $entity);
     $uri['options'] += array('attributes' => array('class' => array('properties-compare-entity-link')));
     $suffix = '';
