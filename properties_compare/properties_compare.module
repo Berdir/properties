@@ -70,7 +70,7 @@ function properties_compare_field_extra_fields() {
   // Collect bundles with a properties field attached to them.
   foreach ($fields as $field) {
     if ($field['type'] == 'properties') {
-      $bundles = array_merge($bundles, $field['bundles']);
+      $bundles = array_merge_recursive($bundles, $field['bundles']);
     }
   }
 
@@ -279,7 +279,7 @@ function properties_compare_list_form($form, &$form_state, $list) {
       }
       $classes[] = $comparable ? 'properties-comparable' : 'properties-not-comparable';
     }
-    
+
     // View mode functionality only implemented for entity_type node.
     if ($compare_item['entity_type'] == 'node' && variable_get('properties_compare_view_mode', TRUE)) {
       $content = node_view($entity, 'properties_compare_block');
@@ -417,7 +417,7 @@ function properties_compare_is_comparable($entity_type1, $entity1, $entity_type2
  * Implements hook_entity_info().
  */
 function properties_compare_entity_info() {
-  if (variable_get('properties_compare_view_mode', TRUE)) {  
+  if (variable_get('properties_compare_view_mode', TRUE)) {
     $return['node']['view modes'] = array(
       'properties_compare_block' => array(
         'label' => t('Properties compare block list'),
